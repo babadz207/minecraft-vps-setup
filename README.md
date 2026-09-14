@@ -61,58 +61,48 @@ curl.exe -sL https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/mai
 
 ---
 
-## 🖥️ 3. Danh Sách Ứng Dụng Trên Màn Hình Desktop VPS (Zero-Terminal)
+## 🖥️ 3. Desktop Applications (Zero-Terminal & Ultra-Optimized)
 
-Sau khi chạy xong lệnh auto setup, màn hình Desktop của VPS sẽ được dọn sạch toàn bộ file `.bat` cũ thừa và thay bằng **5 ứng dụng `.exe` thuần Windows GUI (Subsystem 2)**. Khi nhấp đúp mở bất kỳ ứng dụng nào, **hoàn toàn không bao giờ xuất hiện hay nháy cửa sổ terminal đen (cmd/powershell)**:
+After running the auto setup, your VPS Desktop will be cleaned of all legacy `.bat` files and populated with **5 pure Windows GUI (`.exe`) applications**. Double-clicking any tool will **NEVER open or flash a black command prompt/terminal window**:
 
-| Ứng dụng trên Desktop | Loại | Chức năng (100% Không Mở Terminal Đen) |
+| Desktop Application | Subsystem | Features & Capabilities (Zero Terminal Popups) |
 | :--- | :--- | :--- |
-| **`1. Dang Nhap Microsoft.exe`** | **WinGUI** | Mở bảng hướng dẫn đăng nhập Dark Mode + 2 nút 1-click mở Prism Launcher và trang web `microsoft.com/link`. |
-| **`2. Auto Restart 24-7 (Watchdog).exe`** | **WinGUI Pro Max** | Dashboard giám sát 24/7: Thẻ từng instance, xem live PID & RAM, quét lỗi ngắt kết nối (`latest.log`), tự động reconnect và nút **DỪNG TẤT CẢ INSTANCE**. |
-| **`3. Quan Ly Auto Pay.exe`** | **WinGUI Pro Max** | Giao diện đổi nick nhận tiền & số tiền pay, tự động cập nhật file NBT của Meteor Client và restart bot an toàn! |
-| **`4. Don RAM (Mem Reduct).exe`** | **Trình chạy ngầm** | Khởi chạy nhanh Mem Reduct thu nhỏ xuống khay hệ thống, không bật terminal. |
-| **`5. Mo Prism Launcher.exe`** | **Trình chạy ngầm** | Mở trực tiếp Prism Launcher để cài mod, đổi cấu hình RAM,... không bật terminal. |
+| **`1. Microsoft Login.exe`** | **WinGUI** | Clean step-by-step Microsoft authentication guide with 1-click buttons to launch Prism Launcher and open `microsoft.com/link`. |
+| **`2. Auto Reconnect 24-7 (Watchdog).exe`** | **WinGUI Pro Max** | **24/7 Monitoring Dashboard**: Individual instance cards, live PID & RAM meters, auto-detect disconnects via `latest.log`, automated safe reconnect, and **STOP ALL INSTANCES**. |
+| **`3. Auto Pay Manager.exe`** | **WinGUI Pro Max** | Fast configuration for recipient username and payment amount (`10`, `1M`, `2M`, `500k`...), automated Meteor Client NBT generator, and safe instance relaunch! |
+| **`4. Clean RAM (Mem Reduct).exe`** | **Silent Launcher** | Instantly runs Mem Reduct minimized to the system tray to clear standby cache, with zero console window. |
+| **`5. Open Prism Launcher.exe`** | **Silent Launcher** | Direct launcher for Prism Launcher to adjust instance settings, view console, or manage mods. |
 
 ---
 
-### 🎮 Hướng Dẫn Sử Dụng Dashboard Auto Restart 24/7 (`2. Auto Restart 24-7 (Watchdog).exe`):
-- **Giao diện chuẩn UI/UX Pro Max (Dark Mode Slate OLED)**:
-  - Tông màu: Nền `#0F172A`, Thẻ `#1E293B`, Chữ `#F8FAFC`, Điểm nhấn `#38BDF8` & `#22C55E`.
-  - Tiêu tốn **< 15MB RAM** và **0% CPU** trên VPS (thuần .NET 4.8 native WinForms).
-- **Các tính năng nổi bật**:
-  1. **Danh sách Instance dạng Card trực quan**:
-     - Checkbox chọn riêng instance muốn auto.
-     - Huy hiệu tài khoản: `Acc: <Tên nick Microsoft>`.
-     - Live Status Badge:
-       - `● ĐANG CHẠY [PID: 1234 | RAM: 1.2 GB]` (Xanh lục).
-       - `○ ĐÃ DỪNG` (Xám tro).
-       - `⌛ ĐANG CHỜ MỞ...` (Vàng hổ phách khi đang giãn cách delay).
-     - Nút `Bật / Tắt` riêng lẻ cho từng bot.
-  2. **Khu vực điều khiển trung tâm**:
-     - Ô chỉnh `Delay mở bot (giây)`: Mặc định 25s để chống tràn RAM & nghẽn CPU VPS.
-     - Nút `▶ BẮT ĐẦU AUTO CHECK CONNECT (24/7)`: Tự động chạy tuần tự các instance với delay đã cài đặt, chuyển sang `⏸ TẠM DỪNG` khi đang chạy.
-     - Nút khẩn cấp `🛑 DỪNG TẤT CẢ INSTANCE (STOP ALL)`: Ngắt toàn bộ tiến trình Minecraft và đưa bot về trạng thái an toàn chỉ với 1 cú click!
-  3. **Hệ thống giám sát ngầm & Anti-Ban Guard**:
-     - Đọc log `latest.log` mỗi 4 giây tìm lỗi mất mạng (`Lost connection`, `Timed out`, `Server closed`, `io.netty`, `Connecting too fast`...).
-     - Tự động hạ Priority của tiến trình Minecraft xuống `BelowNormal` để bảo vệ tài nguyên CPU VPS.
-     - Cơ chế phục hồi 2 lớp: Chờ mod tự reconnect trong 10s, nếu không phục hồi mới tắt riêng bot đó và mở lại.
-  4. **Live Console Log**:
-     - Nhật ký hoạt động trực tiếp với mốc thời gian `[HH:mm:ss]`, tự động cuộn và có nút `Xóa Log`.
+### ⚡ Low-Resource VPS Optimizations Built-In:
+- **Render Distance**: Set to **2 Chunks** (saves ~99% chunk mesh rendering vs 32 chunks).
+- **Max FPS**: Capped at **20 FPS** (cuts Mesa3D software CPU rasterization by **83%**).
+- **Sodium CPU Tuning**: `chunk_builder_threads: 1`, `always_defer_chunk_updates: true`, `animate_only_visible_textures: true`.
+- **Mesa3D llvmpipe Tuning**: Adaptive thread scaling (`LP_NUM_THREADS=1` on <= 4-core VPS) prevents software rendering from starving the CPU.
+- **Process Detection**: Native Win32 API + PID caching eliminates periodic WMI calls, keeping Watchdog CPU consumption at **0.00%**.
+- **Process Priority**: Minecraft processes are automatically set to `BelowNormal` priority to protect Remote Desktop (RDP) responsiveness.
+- **Audio Thread Offloading**: All Minecraft audio channels set to `0.0`, completely eliminating sound mixer CPU threads.
 
 ---
 
-### 💡 Hướng Dẫn Sử Dụng App Quản Lý Auto Pay (`3. Quan Ly Auto Pay.exe`):
-- **Giao diện Dark Mode đồng bộ**:
-  - Tự động đọc và hiển thị cấu hình Pay hiện tại của Meteor Client (`VPS-AFK-1\.minecraft\meteor-client\pay_config.json`).
-- **Cách sử dụng**:
-  1. Nhấp đúp vào **`3. Quan Ly Auto Pay.exe`** trên Desktop (hoàn toàn không có cửa sổ đen nào nháy lên).
-  2. Nhập **Tên tài khoản nhận tiền (Username)**.
-  3. Nhập **Số tiền muốn Pay mỗi lần** (Hỗ trợ định dạng `10`, `1M`, `2M`, `500k`, `2000000`...).
-  4. Tích chọn hoặc bỏ tích ô `Kích hoạt tự động gửi /pay khi AFK`.
-  5. Bấm nút **`💾 XÁC NHẬN & KHỞI ĐỘNG LẠI GAME`**:
-     - Tool tự động cập nhật cấu hình nhị phân GZip NBT (`modules.nbt`, `Spam.nbt`) của Meteor Client cho tất cả các Instance.
-     - Tự động khởi động lại bot để nạp cấu hình mới.
-  6. Tích hợp sẵn nút khẩn cấp **`🛑 DỪNG TẤT CẢ INSTANCE`**.
+### 🎮 How to Use `2. Auto Reconnect 24-7 (Watchdog).exe`:
+1. Double-click **`2. Auto Reconnect 24-7 (Watchdog).exe`** on Desktop.
+2. The dashboard displays all detected instances (`VPS-AFK-1`, `2`, `3`) with linked account tags and live status badges (`● RUNNING`, `○ STOPPED`, `⌛ WAITING`).
+3. Set your preferred **Launch Delay** (default: 25s) to prevent CPU and RAM spikes.
+4. Check the instances you want to run, then click **`▶ START AUTO RECONNECT (24/7)`**.
+5. The watchdog will launch each bot sequentially, continuously monitor `latest.log` every 5 seconds for network drops, and automatically restart disconnected bots safely.
+6. Click **`🛑 STOP ALL RUNNING INSTANCES`** anytime for an immediate emergency shutdown.
+
+---
+
+### 💡 How to Use `3. Auto Pay Manager.exe`:
+1. Double-click **`3. Auto Pay Manager.exe`** on Desktop.
+2. The current pay command and active status are read directly from Meteor Client's config.
+3. Enter the **Recipient Username** and **Amount** (e.g. `10` or `1M`).
+4. Keep **Enable automated /pay** checked.
+5. Click **`💾 SAVE CONFIG & RESTART MINECRAFT`**.
+6. The application generates the binary NBT configurations (`modules.nbt`, `Spam.nbt`), applies them across all instances, and safely restarts the clients!
 
 ---
 

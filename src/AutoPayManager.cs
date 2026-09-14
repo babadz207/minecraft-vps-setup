@@ -35,8 +35,8 @@ public class AutoPayManagerForm : Form {
     }
 
     private void BuildUI() {
-        this.Text = "Quan Ly Auto Pay - DonutSMP";
-        this.Size = new Size(540, 560);
+        this.Text = "Auto Pay Manager • DonutSMP";
+        this.Size = new Size(550, 570);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
@@ -44,61 +44,61 @@ public class AutoPayManagerForm : Form {
 
         // Title
         Label lblTitle = new Label();
-        lblTitle.Text = "QUẢN LÝ AUTO PAY • DONUTSMP";
+        lblTitle.Text = "AUTO PAY MANAGER • DONUTSMP";
         lblTitle.Font = new Font("Segoe UI", 14, FontStyle.Bold);
         lblTitle.ForeColor = Color.FromArgb(56, 189, 248); // Sky Blue
-        lblTitle.Location = new Point(15, 12);
-        lblTitle.Size = new Size(495, 28);
+        lblTitle.Location = new Point(15, 14);
+        lblTitle.Size = new Size(505, 28);
         lblTitle.TextAlign = ContentAlignment.MiddleCenter;
         this.Controls.Add(lblTitle);
 
         Label lblSub = new Label();
-        lblSub.Text = "Tự động gửi /pay khi AFK | Tích hợp Meteor Client (Delay: 400 ticks)";
-        lblSub.Font = new Font("Segoe UI", 9);
+        lblSub.Text = "Automated /pay executor | Meteor Client integration (Delay: 400 ticks)";
+        lblSub.Font = new Font("Segoe UI", 9.5f);
         lblSub.ForeColor = Color.FromArgb(148, 163, 184);
-        lblSub.Location = new Point(15, 42);
-        lblSub.Size = new Size(495, 20);
+        lblSub.Location = new Point(15, 44);
+        lblSub.Size = new Size(505, 20);
         lblSub.TextAlign = ContentAlignment.MiddleCenter;
         this.Controls.Add(lblSub);
 
         // Status Card
         Panel pnlStatus = new Panel();
-        pnlStatus.Location = new Point(25, 72);
-        pnlStatus.Size = new Size(475, 80);
+        pnlStatus.Location = new Point(25, 74);
+        pnlStatus.Size = new Size(485, 82);
         pnlStatus.BackColor = Color.FromArgb(30, 41, 59);
         pnlStatus.BorderStyle = BorderStyle.FixedSingle;
         this.Controls.Add(pnlStatus);
 
         lblCurrentStatus = new Label();
-        lblCurrentStatus.Text = "Trạng thái: ĐANG KIỂM TRA...";
+        lblCurrentStatus.Text = "Status: CHECKING...";
         lblCurrentStatus.Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
         lblCurrentStatus.ForeColor = Color.FromArgb(241, 245, 249);
         lblCurrentStatus.Location = new Point(14, 12);
-        lblCurrentStatus.Size = new Size(445, 25);
+        lblCurrentStatus.Size = new Size(455, 25);
         pnlStatus.Controls.Add(lblCurrentStatus);
 
         lblCommandPreview = new Label();
-        lblCommandPreview.Text = "Lệnh hiện tại: Chưa cấu hình";
+        lblCommandPreview.Text = "Current Command: Not configured";
         lblCommandPreview.Font = new Font("Consolas", 9.5f);
         lblCommandPreview.ForeColor = Color.FromArgb(253, 224, 71); // Amber
         lblCommandPreview.Location = new Point(14, 42);
-        lblCommandPreview.Size = new Size(445, 25);
+        lblCommandPreview.Size = new Size(455, 25);
         pnlStatus.Controls.Add(lblCommandPreview);
 
         // Input Box Panel
         Panel pnlInputs = new Panel();
-        pnlInputs.Location = new Point(25, 165);
-        pnlInputs.Size = new Size(475, 195);
+        pnlInputs.Location = new Point(25, 168);
+        pnlInputs.Size = new Size(485, 198);
         pnlInputs.BackColor = Color.FromArgb(30, 41, 59);
         pnlInputs.BorderStyle = BorderStyle.FixedSingle;
         this.Controls.Add(pnlInputs);
 
         Label lblUserHeader = new Label();
-        lblUserHeader.Text = "Tên tài khoản nhận tiền (Username):";
+        lblUserHeader.Text = "Recipient Username:";
         lblUserHeader.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         lblUserHeader.ForeColor = Color.FromArgb(226, 232, 240);
         lblUserHeader.Location = new Point(15, 14);
-        lblUserHeader.Size = new Size(440, 20);
+        lblUserHeader.Size = new Size(450, 20);
         pnlInputs.Controls.Add(lblUserHeader);
 
         txtUser = new TextBox();
@@ -107,15 +107,15 @@ public class AutoPayManagerForm : Form {
         txtUser.ForeColor = Color.White;
         txtUser.BorderStyle = BorderStyle.FixedSingle;
         txtUser.Location = new Point(18, 38);
-        txtUser.Size = new Size(438, 28);
+        txtUser.Size = new Size(448, 28);
         pnlInputs.Controls.Add(txtUser);
 
         Label lblAmountHeader = new Label();
-        lblAmountHeader.Text = "Số tiền muốn Pay mỗi lần (Ví dụ: 10, 1M, 2M, 500k, 2000000):";
+        lblAmountHeader.Text = "Amount to Pay (e.g. 10, 1M, 2M, 500k, 2000000):";
         lblAmountHeader.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         lblAmountHeader.ForeColor = Color.FromArgb(226, 232, 240);
         lblAmountHeader.Location = new Point(15, 78);
-        lblAmountHeader.Size = new Size(440, 20);
+        lblAmountHeader.Size = new Size(450, 20);
         pnlInputs.Controls.Add(lblAmountHeader);
 
         txtAmount = new TextBox();
@@ -124,51 +124,51 @@ public class AutoPayManagerForm : Form {
         txtAmount.ForeColor = Color.White;
         txtAmount.BorderStyle = BorderStyle.FixedSingle;
         txtAmount.Location = new Point(18, 102);
-        txtAmount.Size = new Size(438, 28);
+        txtAmount.Size = new Size(448, 28);
         pnlInputs.Controls.Add(txtAmount);
 
         chkEnable = new CheckBox();
-        chkEnable.Text = " Kích hoạt tự động gửi /pay khi AFK trong game (Meteor Spam)";
+        chkEnable.Text = " Enable automated /pay execution while AFK (Meteor Spam)";
         chkEnable.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         chkEnable.ForeColor = Color.FromArgb(74, 222, 128); // Light Green
-        chkEnable.Location = new Point(18, 148);
-        chkEnable.Size = new Size(440, 28);
+        chkEnable.Location = new Point(18, 150);
+        chkEnable.Size = new Size(450, 28);
         chkEnable.Checked = true;
         pnlInputs.Controls.Add(chkEnable);
 
         // Buttons
         Button btnSave = new Button();
-        btnSave.Text = "💾 XÁC NHẬN & KHỞI ĐỘNG LẠI GAME";
+        btnSave.Text = "💾 SAVE CONFIG & RESTART MINECRAFT";
         btnSave.Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
         btnSave.BackColor = Color.FromArgb(34, 197, 94); // Emerald
         btnSave.ForeColor = Color.White;
         btnSave.FlatStyle = FlatStyle.Flat;
         btnSave.FlatAppearance.BorderSize = 0;
-        btnSave.Location = new Point(25, 375);
-        btnSave.Size = new Size(475, 44);
+        btnSave.Location = new Point(25, 380);
+        btnSave.Size = new Size(485, 44);
         btnSave.Cursor = Cursors.Hand;
         btnSave.Click += (s, e) => { SaveAndRestart(); };
         this.Controls.Add(btnSave);
 
         Button btnStopAll = new Button();
-        btnStopAll.Text = "🛑 DỪNG TẤT CẢ INSTANCE (STOP ALL)";
+        btnStopAll.Text = "🛑 STOP ALL RUNNING INSTANCES";
         btnStopAll.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         btnStopAll.BackColor = Color.FromArgb(220, 38, 38); // Red
         btnStopAll.ForeColor = Color.White;
         btnStopAll.FlatStyle = FlatStyle.Flat;
         btnStopAll.FlatAppearance.BorderSize = 0;
-        btnStopAll.Location = new Point(25, 428);
-        btnStopAll.Size = new Size(475, 38);
+        btnStopAll.Location = new Point(25, 434);
+        btnStopAll.Size = new Size(485, 38);
         btnStopAll.Cursor = Cursors.Hand;
         btnStopAll.Click += (s, e) => { StopAllInstances(); };
         this.Controls.Add(btnStopAll);
 
         lblStatusMsg = new Label();
-        lblStatusMsg.Text = "Lưu ý: Game sẽ tự động tắt và mở lại để nạp cấu hình mới.";
+        lblStatusMsg.Text = "Note: Client processes will safely restart to load new configuration.";
         lblStatusMsg.Font = new Font("Segoe UI", 8.5f);
         lblStatusMsg.ForeColor = Color.FromArgb(148, 163, 184);
-        lblStatusMsg.Location = new Point(25, 478);
-        lblStatusMsg.Size = new Size(475, 24);
+        lblStatusMsg.Location = new Point(25, 484);
+        lblStatusMsg.Size = new Size(485, 24);
         lblStatusMsg.TextAlign = ContentAlignment.MiddleCenter;
         this.Controls.Add(lblStatusMsg);
     }
@@ -187,18 +187,18 @@ public class AutoPayManagerForm : Form {
                 chkEnable.Checked = enabled;
 
                 if (enabled && !string.IsNullOrEmpty(user)) {
-                    lblCurrentStatus.Text = "Trạng thái: ● ĐANG BẬT";
+                    lblCurrentStatus.Text = "Status: ● ACTIVE";
                     lblCurrentStatus.ForeColor = Color.FromArgb(74, 222, 128);
-                    lblCommandPreview.Text = "Lệnh: /pay " + user + " " + amt + " (Delay: 400 ticks)";
+                    lblCommandPreview.Text = "Command: /pay " + user + " " + amt + " (Delay: 400 ticks)";
                 } else {
-                    lblCurrentStatus.Text = "Trạng thái: ○ ĐÃ TẮT";
+                    lblCurrentStatus.Text = "Status: ○ DISABLED";
                     lblCurrentStatus.ForeColor = Color.FromArgb(148, 163, 184);
-                    lblCommandPreview.Text = "Auto Pay hiện đang tắt";
+                    lblCommandPreview.Text = "Auto Pay is currently disabled";
                 }
                 return;
             } catch {}
         }
-        lblCurrentStatus.Text = "Trạng thái: ○ CHƯA CẤU HÌNH";
+        lblCurrentStatus.Text = "Status: ○ NOT CONFIGURED";
         lblCurrentStatus.ForeColor = Color.FromArgb(148, 163, 184);
     }
 
@@ -208,47 +208,47 @@ public class AutoPayManagerForm : Form {
         bool enable = chkEnable.Checked;
 
         if (enable && string.IsNullOrEmpty(user)) {
-            MessageBox.Show("Vui long nhap Username nguoi nhan tien!", "Loi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Please enter the recipient username!", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             txtUser.Focus();
             return;
         }
 
         if (enable && string.IsNullOrEmpty(amt)) {
-            MessageBox.Show("Vui long nhap so tien muon pay (vi du: 10 hoac 1M)!", "Loi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Please enter the amount to pay (e.g. 10 or 1M)!", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             txtAmount.Focus();
             return;
         }
 
         string cmdStr = enable ? ("/pay " + user + " " + amt) : "";
         string confirmMsg = enable ? 
-            string.Format("Xac nhan cau hinh Auto Pay moi:\n- Lenh: {0}\n- Delay: 400 ticks\n- Ap dung cho tat ca Instance\n\nMinecraft se tu dong dong va mo lai de nap config!", cmdStr) :
-            "Xac nhan TAT tinh nang Auto Pay?\n\nMinecraft se tu dong dong va mo lai!";
+            string.Format("Confirm Auto Pay settings update:\n- Command: {0}\n- Interval: 400 ticks\n- Scope: All Instances\n\nMinecraft will automatically restart to apply settings!", cmdStr) :
+            "Confirm disabling Auto Pay?\n\nMinecraft will automatically restart to apply settings!";
 
-        DialogResult dr = MessageBox.Show(confirmMsg, "Xac Nhan Thay Doi", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        DialogResult dr = MessageBox.Show(confirmMsg, "Confirm Changes", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
         if (dr != DialogResult.Yes) return;
 
-        lblStatusMsg.Text = "Đang áp dụng cấu hình và khởi động lại game...";
+        lblStatusMsg.Text = "Applying configuration and restarting game clients...";
         lblStatusMsg.ForeColor = Color.FromArgb(253, 224, 71);
 
-        // 1. Dung tat ca instance
+        // 1. Terminate running instances
         KillProcesses();
 
-        // 2. Cap nhat Meteor Client cho cac instance
+        // 2. Apply Meteor configuration
         ApplyMeteorConfig(user, amt, enable, cmdStr);
 
-        // 3. Relaunch instance
+        // 3. Relaunch instances with adaptive thread tuning
         LaunchInstances();
 
         LoadCurrentConfig();
-        lblStatusMsg.Text = "[OK] Đã lưu cấu hình và khởi động lại Minecraft thành công!";
+        lblStatusMsg.Text = "[OK] Configuration saved and instances successfully restarted!";
         lblStatusMsg.ForeColor = Color.FromArgb(74, 222, 128);
     }
 
     private void StopAllInstances() {
-        DialogResult dr = MessageBox.Show("Ban co chac muon DUNG TAT CA cac bot Minecraft dang chay?", "Xac Nhan Dung", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        DialogResult dr = MessageBox.Show("Are you sure you want to STOP ALL running Minecraft instances?", "Confirm Stop", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (dr == DialogResult.Yes) {
             KillProcesses();
-            lblStatusMsg.Text = "[OK] Đã dừng toàn bộ Minecraft instances!";
+            lblStatusMsg.Text = "[OK] All Minecraft instances have been stopped!";
             lblStatusMsg.ForeColor = Color.FromArgb(239, 68, 68);
         }
     }
@@ -262,7 +262,7 @@ public class AutoPayManagerForm : Form {
                 }
             } catch {}
         }
-        System.Threading.Thread.Sleep(800);
+        System.Threading.Thread.Sleep(600);
     }
 
     private void ApplyMeteorConfig(string user, string amt, bool enable, string cmdStr) {
@@ -273,7 +273,7 @@ public class AutoPayManagerForm : Form {
             if (!Directory.Exists(meteorDir)) continue;
 
             try {
-                // Ghi pay_config.json
+                // Write pay_config.json
                 string cfgFile = Path.Combine(meteorDir, "pay_config.json");
                 string json = string.Format("{{\"user\":\"{0}\",\"amount\":\"{1}\",\"enabled\":{2},\"updated\":\"{3}\"}}",
                     user, amt, enable ? "true" : "false", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -493,7 +493,7 @@ public class AutoPayManagerForm : Form {
         string prismExe = Path.Combine(prismDir, "prismlauncher.exe");
         if (!File.Exists(prismExe)) return;
 
-        // Doc accounts
+        // Read accounts
         string[] accounts = new string[0];
         string accFile = Path.Combine(prismDir, "accounts.json");
         if (File.Exists(accFile)) {
@@ -514,12 +514,15 @@ public class AutoPayManagerForm : Form {
                 string args = "--launch \"" + inst + "\" --server donutsmp.net" + (!string.IsNullOrEmpty(acc) ? " --profile \"" + acc + "\"" : "");
                 
                 try {
-                    Process.Start(new ProcessStartInfo {
+                    ProcessStartInfo psi = new ProcessStartInfo {
                         FileName = prismExe,
                         Arguments = args,
                         WorkingDirectory = prismDir,
                         UseShellExecute = true
-                    });
+                    };
+                    psi.EnvironmentVariables["LP_NUM_THREADS"] = (Environment.ProcessorCount <= 4) ? "1" : "2";
+                    psi.EnvironmentVariables["MESA_GL_VERSION_OVERRIDE"] = "3.3";
+                    Process.Start(psi);
                     launched++;
                     System.Threading.Thread.Sleep(5000); // 5s delay
                 } catch {}

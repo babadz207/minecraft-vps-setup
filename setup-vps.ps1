@@ -530,11 +530,12 @@ $packComps += $compEntry
 $mmcPackJson = (@{ components = $packComps; formatVersion = 1 } | ConvertTo-Json -Depth 5)
 [System.IO.File]::WriteAllText((Join-Path $InstanceDir "mmc-pack.json"), $mmcPackJson, [System.Text.Encoding]::UTF8)
 $javaPathEscaped = if ($javawExe) { $javawExe.Replace("\", "/") } else { "javaw" }
-$memOverride = if ($LimitRamCpu) { "true" } else { "false" }
-$jvmArgs = if ($LimitRamCpu) {
-"-XX:+UseG1GC -XX:ActiveProcessorCount=2 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1 -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -Dsun.java2d.opengl=false"
+$memOverride = "true"
+$cpuCores = [Environment]::ProcessorCount
+$jvmArgs = if ($LimitRamCpu -or $cpuCores -le 4) {
+"-XX:+UseG1GC -XX:ActiveProcessorCount=2 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1 -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
 } else {
-"-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -Dsun.java2d.opengl=false"
+"-XX:+UseG1GC -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
 }
 $instanceCfgLines = @(
 "[General]",
@@ -544,9 +545,9 @@ $instanceCfgLines = @(
 "InstanceType=OneSix",
 "OverrideJava=true",
 "OverrideJavaArgs=true",
-"OverrideMemory=$memOverride",
-"MinMemAlloc=512",
-"MaxMemAlloc=2048",
+"OverrideMemory=true",
+"MinMemAlloc=384",
+"MaxMemAlloc=1536",
 "JavaPath=$javaPathEscaped",
 "JvmArgs=$jvmArgs",
 "JoinServerOnLaunch=true",
@@ -882,16 +883,15 @@ Copy-Item -Path $targetPack -Destination $otherPackFile -Force
 }
 }
 }
-Write-Title "BUOC 10: TAO CAU HINH OPTIONS.TXT SIEU NHE CHO VPS"
+Write-Title "BUOC 10: TAO CAU HINH OPTIONS.TXT & SODIUM SIEU NHE (TOI UU CHO VPS YEU)"
 $optionsFile = Join-Path $MinecraftDir "options.txt"
-if (-not (Test-Path $optionsFile)) {
 $optionsLines = @(
 "version:3955",
 "graphicsMode:0",
-"renderDistance:32",
-"simulationDistance:32",
-"maxFps:120",
-"enableVsync:true",
+"renderDistance:2",
+"simulationDistance:4",
+"maxFps:20",
+"enableVsync:false",
 "guiScale:0",
 "fullscreen:false",
 "entityDistanceScaling:0.5",
@@ -915,10 +915,27 @@ $optionsLines = @(
 'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip"]'
 )
 [System.IO.File]::WriteAllLines($optionsFile, $optionsLines, [System.Text.Encoding]::UTF8)
-Write-Success "Da cau hinh options.txt (Sodium): Render Distance 32 Chunks, Simulation Distance 32 Chunks, 120 FPS, VSync ON, Active Resource Pack!"
-} else {
-Write-Success "options.txt da ton tai, giu nguyen cac cai dat tuy chinh cua ban!"
+
+# Ghi file cau hinh Sodium toi uu hoa CPU cho VPS
+$sodiumOptFile = Join-Path $ConfigDir "sodium-options.json"
+$sodiumOptJson = @'
+{
+  "quality": {
+    "weather_quality": "FAST",
+    "leaves_quality": "FAST"
+  },
+  "advanced": {
+    "cpu_render_ahead_limit": 1
+  },
+  "performance": {
+    "chunk_builder_threads": 1,
+    "always_defer_chunk_updates": true,
+    "animate_only_visible_textures": true
+  }
 }
+'@
+[System.IO.File]::WriteAllText($sodiumOptFile, $sodiumOptJson, [System.Text.Encoding]::UTF8)
+Write-Success "Da toi uu options.txt & Sodium: Render 2 Chunks, 20 FPS, 1 Chunk Thread, 0% Audio CPU!"
 if ($InstanceCount -gt 1) {
 Write-Title "KHOI TAO THEM INSTANCE CHO VPS 8-8 (TOI DA $InstanceCount INSTANCE)"
 for ($i = 2; $i -le $InstanceCount; $i++) {
@@ -1033,11 +1050,11 @@ $repoRaw = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main
 
 # 1. Tai hoac copy cac file thuc thi .exe (va ma nguon .cs du phong)
 $apps = @(
-    @{ Name = "DangNhapMicrosoft.exe"; Src = "DangNhapMicrosoft.cs"; Desktop = "1. Dang Nhap Microsoft.exe"; Desc = "App Huong Dan Dang Nhap Microsoft"; Main = $null; Ref = $null },
-    @{ Name = "WatchdogUI.exe"; Src = "WatchdogUI.cs"; Desktop = "2. Auto Restart 24-7 (Watchdog).exe"; Desc = "App Auto Restart 24/7 (Watchdog UI)"; Main = $null; Ref = "System.Management.dll" },
-    @{ Name = "AutoPayManager.exe"; Src = "AutoPayManager.cs"; Desktop = "3. Quan Ly Auto Pay.exe"; Desc = "App Quan Ly Auto Pay"; Main = $null; Ref = $null },
-    @{ Name = "DonRAM.exe"; Src = "Launchers.cs"; Desktop = "4. Don RAM (Mem Reduct).exe"; Desc = "Launcher Don RAM"; Main = "DonRAMLauncher"; Ref = $null },
-    @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Mo Prism Launcher.exe"; Desc = "Launcher Mo Prism Launcher"; Main = "MoPrismLauncher"; Ref = $null }
+    @{ Name = "DangNhapMicrosoft.exe"; Src = "DangNhapMicrosoft.cs"; Desktop = "1. Microsoft Login.exe"; Desc = "Microsoft Login Guide"; Main = $null; Ref = $null },
+    @{ Name = "WatchdogUI.exe"; Src = "WatchdogUI.cs"; Desktop = "2. Auto Reconnect 24-7 (Watchdog).exe"; Desc = "24/7 Watchdog & Auto Reconnect"; Main = $null; Ref = "System.Management.dll" },
+    @{ Name = "AutoPayManager.exe"; Src = "AutoPayManager.cs"; Desktop = "3. Auto Pay Manager.exe"; Desc = "Auto Pay Manager"; Main = $null; Ref = $null },
+    @{ Name = "DonRAM.exe"; Src = "Launchers.cs"; Desktop = "4. Clean RAM (Mem Reduct).exe"; Desc = "Clean RAM Launcher"; Main = "DonRAMLauncher"; Ref = $null },
+    @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Open Prism Launcher.exe"; Desc = "Prism Launcher Shortcut"; Main = "MoPrismLauncher"; Ref = $null }
 )
 
 # Tim csc.exe bien dich C# san co tren Windows
@@ -1086,14 +1103,19 @@ foreach ($app in $apps) {
 # 2. Don dep Desktop sach se va copy 5 file exe ra Desktop
 $Desktop = [Environment]::GetFolderPath('Desktop')
 if ($Desktop -and (Test-Path $Desktop)) {
-    # Xoa triet de moi file bat cu va shortcut cu
+    # Clean all legacy batch files and old shortcut variations
     Remove-Item (Join-Path $Desktop "*.bat") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Chay Minecraft AFK*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Dang Nhap Microsoft*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Microsoft Login*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Auto Restart*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Auto Reconnect*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Quan Ly Auto Pay*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Auto Pay Manager*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Don RAM*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Clean RAM*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Mo Prism Launcher*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Open Prism Launcher*") -Force -ErrorAction SilentlyContinue
 
     foreach ($app in $apps) {
         $sourceExe = Join-Path $binDir $app.Name
@@ -1107,19 +1129,19 @@ if ($Desktop -and (Test-Path $Desktop)) {
 # Xoa thu muc tam
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-Write-Title "HOAN TAT CAI DAT 100%! MINECRAFT VPS DA SAN SANG"
-Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Fix GLFW 65542) : SAN SANG" -ForegroundColor Green
-Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)        : DA KHOI TAO" -ForegroundColor Green
-Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Beatrix Shop Pack   : DA CAI DAT" -ForegroundColor Green
-Write-Host " [OK] Mem Reduct: Tu dong don RAM dinh ky 30p & khi RAM > 85%      : DANG CHAY" -ForegroundColor Green
-Write-Host " [OK] 5 Ung Dung WinGUI (.exe) da tao ngoai Desktop (Zero Terminal) : SAN SANG" -ForegroundColor Green
+Write-Title "SETUP COMPLETED 100%! MINECRAFT VPS IS READY"
+Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Software Rendering) : READY" -ForegroundColor Green
+Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)            : INITIALIZED" -ForegroundColor Green
+Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
+Write-Host " [OK] Mem Reduct: Auto Memory Cleaning (> 85% & every 30m)           : RUNNING" -ForegroundColor Green
+Write-Host " [OK] 5 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
 Write-Host ""
-Write-Host "QUY TRINH AFK TREN DONUTSMP.NET (KHONG CON TERMINAL DEN):" -ForegroundColor Yellow
-Write-Host "  1. [1. Dang Nhap Microsoft.exe]          -> Huong dan & dang nhap nick (chi 1 lan dau)" -ForegroundColor Cyan
-Write-Host "  2. [2. Auto Restart 24-7 (Watchdog).exe] -> Giao dien Dashboard 24/7, auto reconnect!" -ForegroundColor Green
-Write-Host "  3. [3. Quan Ly Auto Pay.exe]             -> Giao dien doi tien & nick nhan /pay" -ForegroundColor Cyan
-Write-Host "  4. [4. Don RAM (Mem Reduct).exe]         -> Don RAM ngay lap tuc (chay ngam)" -ForegroundColor Cyan
-Write-Host "  5. [5. Mo Prism Launcher.exe]            -> Mo Prism Launcher truc tiep" -ForegroundColor Cyan
+Write-Host "QUICK START GUIDE FOR DONUTSMP.NET (ZERO TERMINAL):" -ForegroundColor Yellow
+Write-Host "  1. [1. Microsoft Login.exe]                 -> One-time Microsoft account setup" -ForegroundColor Cyan
+Write-Host "  2. [2. Auto Reconnect 24-7 (Watchdog).exe]  -> 24/7 Monitoring Dashboard & Auto Reconnect" -ForegroundColor Green
+Write-Host "  3. [3. Auto Pay Manager.exe]                -> Configure /pay command & recipient" -ForegroundColor Cyan
+Write-Host "  4. [4. Clean RAM (Mem Reduct).exe]          -> Instant background memory cleaning" -ForegroundColor Cyan
+Write-Host "  5. [5. Open Prism Launcher.exe]             -> Direct Prism Launcher access" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Chuc ban treo bot AFK thanh cong va an toan 24/7!" -ForegroundColor Magenta
+Write-Host "Have a smooth and safe 24/7 AFK session!" -ForegroundColor Magenta
 
