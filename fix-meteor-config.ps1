@@ -330,6 +330,25 @@ foreach ($inst in $targetInstances) {
                     Write-Host "  -> [OK] Latest autosell.jar updated successfully!" -ForegroundColor Green
                 }
             }
+
+            # Remove conflicting sodium-0.8.13 (breaks iris <= 1.10.7)
+            Remove-Item (Join-Path $md "sodium-fabric-0.8.13*") -Force -ErrorAction SilentlyContinue
+
+            # Ensure compatible sodium-0.8.7 is present
+            $sodiumFile = Join-Path $md "sodium-fabric-0.8.7+mc1.21.11.jar"
+            if (-not (Test-Path $sodiumFile) -or ((Get-Item $sodiumFile).Length -lt 1000000)) {
+                Write-Host "  -> Installing compatible Sodium 0.8.7 (fixes Iris conflict)..." -ForegroundColor Yellow
+                $sUrl = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/bin/sodium-fabric-0.8.7%2Bmc1.21.11.jar"
+                try {
+                    & curl.exe -k -L --connect-timeout 10 -o $sodiumFile $sUrl
+                } catch {}
+                if (-not (Test-Path $sodiumFile) -or ((Get-Item $sodiumFile).Length -lt 1000000)) {
+                    & curl.exe -k -L --connect-timeout 10 -o $sodiumFile "https://drive.usercontent.google.com/download?id=1GU1zQZ4XzTTSlP34NoHWCbvompxrylvH&export=download&confirm=t"
+                }
+                if (Test-Path $sodiumFile) {
+                    Write-Host "  -> [OK] Sodium 0.8.7 installed successfully!" -ForegroundColor Green
+                }
+            }
         }
     }
 

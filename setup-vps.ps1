@@ -641,9 +641,10 @@ $modsList = @(
 @{ Id = "1dDYtI2wLbR6YmJpvRANYg6NW5Ti6zvau"; Name = "modmenu-17.0.1-beta.1.jar" },
 @{ Id = "1LOZEYDeYU4XIJ0z7yN9uOgX7y4ciH_oA"; Name = "opsec-1.21.11+v1.1.7.1.jar" },
 @{ Id = "1KCgU8KJAQ7KoQYG-Q_1dQP4H4qDzc3Bq"; Name = "placeholder-api-2.8.2+1.21.10.jar" },
-@{ Id = "1XKSpFU4Qf94NNtu-lZTr0WstRsnMt7FV"; Name = "sodium-fabric-0.8.13+mc1.21.11.jar" },
+@{ Id = "1GU1zQZ4XzTTSlP34NoHWCbvompxrylvH"; Name = "sodium-fabric-0.8.7+mc1.21.11.jar" },
 @{ Id = "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"; Name = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar" }
 )
+Remove-Item (Join-Path $ModsDir "sodium-fabric-0.8.13*") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "* (1).jar") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "*.tmp") -Force -ErrorAction SilentlyContinue
 $count = 0
