@@ -292,6 +292,10 @@ foreach ($inst in $targetInstances) {
         } | ConvertTo-Json -Compress
         [System.IO.File]::WriteAllText((Join-Path $mDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
     }
+    [System.IO.File]::WriteAllText((Join-Path $BaseDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
+    $dDir = Join-Path $BaseDir "data"
+    if (-not (Test-Path $dDir)) { New-Item -ItemType Directory -Path $dDir -Force | Out-Null }
+    [System.IO.File]::WriteAllText((Join-Path $dDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
 
     # 5.5. Ensure iris-fabric-1.10.7+mc1.21.11.jar is present to eliminate screen flickering / nhap nhay
     $modsDirs = @(
@@ -383,11 +387,13 @@ foreach ($inst in $targetInstances) {
         [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
     }
 
-    # 6.5. Update instance.cfg (allocate 2.5GB RAM & unlock all 4 CPU cores)
+    # 6.5. Update instance.cfg (allocate 2.5GB RAM, unlock CPU & set PreLaunchCommand guard)
     $instCfgPath = Join-Path $inst.FullName "instance.cfg"
     if (Test-Path $instCfgPath) {
         $cfgLines = Get-Content $instCfgPath
         $newCfg = @()
+        $hasOverrideCmd = $false
+        $hasPreLaunch = $false
         foreach ($cl in $cfgLines) {
             if ($cl -match '^MaxMemAlloc=') {
                 $newCfg += "MaxMemAlloc=2560"
@@ -395,10 +401,18 @@ foreach ($inst in $targetInstances) {
                 $newCfg += "MinMemAlloc=512"
             } elseif ($cl -match '^JvmArgs=') {
                 $newCfg += "JvmArgs=-XX:+UseG1GC -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
+            } elseif ($cl -match '^OverrideCommands=') {
+                $newCfg += "OverrideCommands=true"
+                $hasOverrideCmd = $true
+            } elseif ($cl -match '^PreLaunchCommand=') {
+                $newCfg += "PreLaunchCommand=C:/MinecraftVPS/bin/prelaunch.bat"
+                $hasPreLaunch = $true
             } else {
                 $newCfg += $cl
             }
         }
+        if (-not $hasOverrideCmd) { $newCfg += "OverrideCommands=true" }
+        if (-not $hasPreLaunch) { $newCfg += "PreLaunchCommand=C:/MinecraftVPS/bin/prelaunch.bat" }
         [System.IO.File]::WriteAllLines($instCfgPath, $newCfg, [System.Text.Encoding]::UTF8)
     }
 

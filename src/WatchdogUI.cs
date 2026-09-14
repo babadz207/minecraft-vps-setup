@@ -565,6 +565,17 @@ public class WatchdogForm : Form {
         AppendLog("[" + instName + "] Launching client " + accArg + " -> Server " + serverAddress + "...");
 
         try {
+            string prelaunchBat = Path.Combine(baseDir, @"bin\prelaunch.bat");
+            if (File.Exists(prelaunchBat)) {
+                try {
+                    ProcessStartInfo pPre = new ProcessStartInfo("cmd.exe", "/c \"" + prelaunchBat + "\"");
+                    pPre.CreateNoWindow = true;
+                    pPre.UseShellExecute = false;
+                    Process p = Process.Start(pPre);
+                    if (p != null) p.WaitForExit(3000);
+                } catch {}
+            }
+
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = prismExe;
             psi.Arguments = "--launch \"" + instName + "\" --server " + serverAddress + accArg;

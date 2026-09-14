@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string[]]$InstanceNames = @(),
     [string]$InstanceName = "",
     [string]$ServerAddress = "donutsmp.net",
@@ -183,6 +183,12 @@ function Launch-Instance([string]$inst) {
     $accName = $instAccounts[$inst]
     $accDisplay = if ($accName) { "Tai khoan: $accName" } else { "Tai khoan: Mac dinh" }
     Write-Host "[$now] [$inst] Dang khoi chay Minecraft ($accDisplay) -> Server: $ServerAddress..." -ForegroundColor Green
+    
+    $prelaunchBat = Join-Path $baseDir "bin\prelaunch.bat"
+    if (Test-Path $prelaunchBat) {
+        try { Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$prelaunchBat`"" -WindowStyle Hidden -Wait } catch {}
+    }
+
     $env:LP_NUM_THREADS = "2"
     
     $argList = "--launch `"$inst`" --server `"$ServerAddress`""

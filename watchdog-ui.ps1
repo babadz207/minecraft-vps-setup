@@ -1,4 +1,4 @@
-﻿Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $BaseDir = "C:\MinecraftVPS"
@@ -333,6 +333,11 @@ function Start-SingleInstance([string]$instName) {
     $acc = $item.Account
     $accArg = if ($acc -and $acc -ne "(Chua dang nhap)") { " --profile `"$acc`"" } else { "" }
     Append-UiLog "[$instName] Dang khoi dong Minecraft $accArg -> Server $ServerAddress..."
+    
+    $prelaunchBat = Join-Path $BaseDir "bin\prelaunch.bat"
+    if (Test-Path $prelaunchBat) {
+        try { Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$prelaunchBat`"" -WindowStyle Hidden -Wait } catch {}
+    }
     
     $env:LP_NUM_THREADS = "2"
     $arg = "--launch `"$instName`" --server $ServerAddress$accArg"

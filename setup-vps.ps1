@@ -50,6 +50,8 @@ $ModsDir = Join-Path $MinecraftDir "mods"
 $ConfigDir = Join-Path $MinecraftDir "config"
 $ResourcePacksDir = Join-Path $MinecraftDir "resourcepacks"
 $MeteorDir = Join-Path $MinecraftDir "meteor-client"
+$binDir = Join-Path $BaseDir "bin"
+if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
 $repoRaw = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main"
 function Write-Title {
 param([string]$Text)
@@ -234,9 +236,9 @@ try {
 Flush-KeyboardBuffer; $inU = Read-Host "Enter recipient username for Auto Pay (or press ENTER to skip)"
 if (-not [string]::IsNullOrWhiteSpace($inU)) {
 $targetUser = $inU.Trim()
-$targetAmount = ""
-while ($true) {
-Flush-KeyboardBuffer; $inA = Read-Host "Enter payment amount for $targetUser (e.g. 10, 500k, 1M, 2M)"
+$targetAmount = "1M"
+Flush-KeyboardBuffer; $inA = Read-Host "Enter payment amount for $targetUser [Default: 1M] (press ENTER for 1M)"
+if (-not [string]::IsNullOrWhiteSpace($inA)) {
 $amtTrim = $inA.Trim()
 if ($amtTrim -match '^[0-9]+(\.[0-9]+)?[kKmMbBtT]?$') {
 $nPart = $amtTrim -replace '[kKmMbBtT]$', ''
@@ -245,23 +247,23 @@ if ([double]::TryParse($nPart, [ref]$pv) -and $pv -gt 0) {
 if ($amtTrim -match '[a-zA-Z]$') {
 $targetAmount = $amtTrim.Substring(0, $amtTrim.Length - 1) + $amtTrim.Substring($amtTrim.Length - 1).ToUpper()
 } else { $targetAmount = $amtTrim }
-break
 }
 }
-Write-Host " [!] Invalid amount format! (Example: 10, 500k, 1M, 2M)" -ForegroundColor Red
 }
-$cmdPreview = "/pay $targetUser $targetAmount"
-Write-Host "  -> Command: $cmdPreview (Delay: 400 ticks / 20s)" -ForegroundColor Yellow
-Flush-KeyboardBuffer; $cfm = Read-Host "Confirm this Auto Pay configuration? (y/n)"
-if ($cfm -match '^(?i)y(es)?$') {
-$PayUser = $targetUser; $PayAmount = $targetAmount; $AutoPayCmd = $cmdPreview; $EnableAutoPay = $true
-Write-Host " -> [OK] Confirmed: $AutoPayCmd" -ForegroundColor Green
-}
+$PayUser = $targetUser
+$PayAmount = $targetAmount
+$AutoPayCmd = "/pay $targetUser $targetAmount"
+$EnableAutoPay = $true
+Write-Host " -> [OK] Auto Pay configured: $AutoPayCmd (Active: ON, Delay: 20s, Disable on leave/dc: OFF)" -ForegroundColor Green
 } else {
-$EnableAutoPay = $false; $AutoPayCmd = ""
+$EnableAutoPay = $false
+$AutoPayCmd = ""
 Write-Host " -> Skipped Auto Pay (Module disabled)." -ForegroundColor DarkGray
 }
-} catch {}
+} catch {
+$EnableAutoPay = $false
+$AutoPayCmd = ""
+}
 }
 $totalRamBytes = 0
 try {
@@ -557,6 +559,7 @@ $jvmArgs = if ($LimitRamCpu) {
 } else {
 "-XX:+UseG1GC -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
 }
+$preLaunchBatEscaped = (Join-Path $binDir "prelaunch.bat").Replace("\", "/")
 $instanceCfgLines = @(
 "[General]",
 "ConfigVersion=1.2",
@@ -566,6 +569,8 @@ $instanceCfgLines = @(
 "OverrideJava=true",
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
+"OverrideCommands=true",
+"PreLaunchCommand=$preLaunchBatEscaped",
 "MinMemAlloc=512",
 "MaxMemAlloc=$maxMem",
 "JavaPath=$javaPathEscaped",
@@ -902,6 +907,10 @@ foreach ($mTarget in $MeteorDirs) {
     [System.IO.File]::WriteAllBytes((Join-Path $mTarget "modules.nbt"), $finalGzModules)
     [System.IO.File]::WriteAllText((Join-Path $mTarget "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
 }
+[System.IO.File]::WriteAllText((Join-Path $BaseDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
+$dataDir = Join-Path $BaseDir "data"
+if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
+[System.IO.File]::WriteAllText((Join-Path $dataDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
 Write-Success "No-Render configuration installed & AUTO-ENABLED on Meteor Client!"
 if ($EnableAutoPay) {
 Write-Success "Auto Pay config ($AutoPayCmd | Delay: 400 | Disable On Leave/Disconnect OFF) AUTO-ENABLED!"
@@ -1002,6 +1011,8 @@ $nextCfgLines = @(
 "OverrideJava=true",
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
+"OverrideCommands=true",
+"PreLaunchCommand=$preLaunchBatEscaped",
 "MinMemAlloc=384",
 "MaxMemAlloc=1536",
 "JavaPath=$javaPathEscaped",
@@ -1109,6 +1120,27 @@ $apps = @(
     @{ Name = "DonRAM.exe"; Src = "Launchers.cs"; Desktop = "4. Clean RAM (Mem Reduct).exe"; Desc = "Clean RAM Launcher"; Main = "DonRAMLauncher"; Ref = $null },
     @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Open Prism Launcher.exe"; Desc = "Prism Launcher Shortcut"; Main = "MoPrismLauncher"; Ref = $null }
 )
+
+# Cai dat prelaunch.bat va sync-configs.ps1 vao bin
+$targetPrelaunch = Join-Path $binDir "prelaunch.bat"
+$localPrelaunch = Join-Path $ScriptDir "bin\prelaunch.bat"
+if (Test-Path $localPrelaunch) {
+    Copy-Item -Path $localPrelaunch -Destination $targetPrelaunch -Force
+} else {
+    Download-FileWithCurl "$repoRaw/bin/prelaunch.bat" $targetPrelaunch "Pre-Launch Guard Batch"
+}
+
+$targetSync = Join-Path $binDir "sync-configs.ps1"
+$localSync = Join-Path $ScriptDir "bin\sync-configs.ps1"
+if (Test-Path $localSync) {
+    Copy-Item -Path $localSync -Destination $targetSync -Force
+} else {
+    Download-FileWithCurl "$repoRaw/bin/sync-configs.ps1" $targetSync "Config Sync Script"
+}
+
+if (Test-Path $targetSync) {
+    try { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $targetSync -BaseDir $BaseDir } catch {}
+}
 
 # Tim csc.exe bien dich C# san co tren Windows
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
