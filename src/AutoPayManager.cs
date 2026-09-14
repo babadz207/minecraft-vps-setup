@@ -269,73 +269,123 @@ public class AutoPayManagerForm : Form {
         if (!Directory.Exists(instancesDir)) return;
 
         foreach (string instPath in Directory.GetDirectories(instancesDir)) {
-            string meteorDir = Path.Combine(instPath, @".minecraft\meteor-client");
-            if (!Directory.Exists(meteorDir)) continue;
+            string[] mDirs = new string[] {
+                Path.Combine(instPath, @".minecraft\meteor-client"),
+                Path.Combine(instPath, @"meteor-client")
+            };
 
-            try {
-                // Write pay_config.json
-                string cfgFile = Path.Combine(meteorDir, "pay_config.json");
-                string json = string.Format("{{\"user\":\"{0}\",\"amount\":\"{1}\",\"enabled\":{2},\"updated\":\"{3}\"}}",
-                    user, amt, enable ? "true" : "false", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                File.WriteAllText(cfgFile, json, Encoding.UTF8);
+            foreach (string meteorDir in mDirs) {
+                try {
+                    if (!Directory.Exists(meteorDir)) Directory.CreateDirectory(meteorDir);
 
-                // Build NBT
-                byte[] noRenderBytes = Convert.FromBase64String(NoRenderGzB64);
-                byte[] decomp = DecompressGz(noRenderBytes);
-                byte[] noRenderComp = new byte[decomp.Length - 19];
-                Array.Copy(decomp, 18, noRenderComp, 0, noRenderComp.Length);
+                    // Write pay_config.json
+                    string cfgFile = Path.Combine(meteorDir, "pay_config.json");
+                    string json = string.Format("{{\"user\":\"{0}\",\"amount\":\"{1}\",\"enabled\":{2},\"updated\":\"{3}\"}}",
+                        user, amt, enable ? "true" : "false", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    File.WriteAllText(cfgFile, json, Encoding.UTF8);
 
-                int moduleCount = 1;
-                byte[] spamComp = null;
+                    // Build NBT
+                    byte[] noRenderBytes = Convert.FromBase64String(NoRenderGzB64);
+                    byte[] decomp = DecompressGz(noRenderBytes);
+                    byte[] noRenderComp = new byte[decomp.Length - 19];
+                    Array.Copy(decomp, 18, noRenderComp, 0, noRenderComp.Length);
 
-                if (enable && !string.IsNullOrEmpty(cmdStr)) {
-                    moduleCount = 2;
-                    spamComp = BuildSpamNbtBytes(cmdStr, 400);
+                    int moduleCount = 1;
+                    byte[] spamComp = null;
 
-                    using (MemoryStream sMs = new MemoryStream()) {
-                        sMs.WriteByte(10);
-                        sMs.WriteByte(0); sMs.WriteByte(0);
-                        sMs.Write(spamComp, 0, spamComp.Length);
-                        byte[] spamGz = CompressGz(sMs.ToArray());
+                    if (enable && !string.IsNullOrEmpty(cmdStr)) {
+                        moduleCount = 2;
+                        spamComp = BuildSpamNbtBytes(cmdStr, 400);
 
-                        string[] sPaths = new string[] {
-                            Path.Combine(meteorDir, @"modules\Spam.nbt"),
-                            Path.Combine(meteorDir, @"modules\spam.nbt"),
-                            Path.Combine(meteorDir, @"presets\spam.nbt"),
-                            Path.Combine(meteorDir, @"presets\spam\default.nbt")
-                        };
-                        foreach (string sp in sPaths) {
-                            string pDir = Path.GetDirectoryName(sp);
-                            if (!Directory.Exists(pDir)) Directory.CreateDirectory(pDir);
-                            File.WriteAllBytes(sp, spamGz);
+                        using (MemoryStream sMs = new MemoryStream()) {
+                            sMs.WriteByte(10);
+                            sMs.WriteByte(0); sMs.WriteByte(0);
+                            sMs.Write(spamComp, 0, spamComp.Length);
+                            byte[] spamGz = CompressGz(sMs.ToArray());
+
+                            string[] sPaths = new string[] {
+                                Path.Combine(meteorDir, @"modules\Spam.nbt"),
+                                Path.Combine(meteorDir, @"modules\spam.nbt"),
+                                Path.Combine(meteorDir, @"presets\spam.nbt"),
+                                Path.Combine(meteorDir, @"presets\spam\default.nbt")
+                            };
+                            foreach (string sp in sPaths) {
+                                string pDir = Path.GetDirectoryName(sp);
+                                if (!Directory.Exists(pDir)) Directory.CreateDirectory(pDir);
+                                File.WriteAllBytes(sp, spamGz);
+                            }
                         }
                     }
-                }
 
-                // Root modules.nbt
-                using (MemoryStream rMs = new MemoryStream()) {
-                    rMs.WriteByte(10); // TAG_Compound
-                    rMs.WriteByte(0); rMs.WriteByte(0); // empty name
-                    rMs.WriteByte(9);  // TAG_List
-                    rMs.WriteByte(0); rMs.WriteByte(7); // length = 7
-                    byte[] mBytes = Encoding.UTF8.GetBytes("modules");
-                    rMs.Write(mBytes, 0, 7);
-                    rMs.WriteByte(10); // type = TAG_Compound
-                    rMs.WriteByte((byte)((moduleCount >> 24) & 0xFF));
-                    rMs.WriteByte((byte)((moduleCount >> 16) & 0xFF));
-                    rMs.WriteByte((byte)((moduleCount >> 8) & 0xFF));
-                    rMs.WriteByte((byte)(moduleCount & 0xFF));
-
-                    rMs.Write(noRenderComp, 0, noRenderComp.Length);
-                    if (moduleCount == 2 && spamComp != null) {
-                        rMs.Write(spamComp, 0, spamComp.Length);
+                    // Standalone no-render files
+                    string[] nrPaths = new string[] {
+                        Path.Combine(meteorDir, @"modules\No Render.nbt"),
+                        Path.Combine(meteorDir, @"modules\no-render.nbt"),
+                        Path.Combine(meteorDir, @"presets\no-render.nbt"),
+                        Path.Combine(meteorDir, @"presets\no-render\default.nbt"),
+                        Path.Combine(meteorDir, @"no-render.nbt")
+                    };
+                    foreach (string np in nrPaths) {
+                        string pDir = Path.GetDirectoryName(np);
+                        if (!Directory.Exists(pDir)) Directory.CreateDirectory(pDir);
+                        File.WriteAllBytes(np, noRenderBytes);
                     }
-                    rMs.WriteByte(0); // TAG_End
 
-                    byte[] finalGz = CompressGz(rMs.ToArray());
-                    File.WriteAllBytes(Path.Combine(meteorDir, "modules.nbt"), finalGz);
-                }
-            } catch {}
+                    // Root modules.nbt
+                    using (MemoryStream rMs = new MemoryStream()) {
+                        rMs.WriteByte(10); // TAG_Compound
+                        rMs.WriteByte(0); rMs.WriteByte(0); // empty name
+                        rMs.WriteByte(9);  // TAG_List
+                        rMs.WriteByte(0); rMs.WriteByte(7); // length = 7
+                        byte[] mBytes = Encoding.UTF8.GetBytes("modules");
+                        rMs.Write(mBytes, 0, 7);
+                        rMs.WriteByte(10); // type = TAG_Compound
+                        rMs.WriteByte((byte)((moduleCount >> 24) & 0xFF));
+                        rMs.WriteByte((byte)((moduleCount >> 16) & 0xFF));
+                        rMs.WriteByte((byte)((moduleCount >> 8) & 0xFF));
+                        rMs.WriteByte((byte)(moduleCount & 0xFF));
+
+                        rMs.Write(noRenderComp, 0, noRenderComp.Length);
+                        if (moduleCount == 2 && spamComp != null) {
+                            rMs.Write(spamComp, 0, spamComp.Length);
+                        }
+                        rMs.WriteByte(0); // TAG_End
+
+                        byte[] finalGz = CompressGz(rMs.ToArray());
+                        File.WriteAllBytes(Path.Combine(meteorDir, "modules.nbt"), finalGz);
+                    }
+                } catch {}
+            }
+
+            // Also update options.txt in both .minecraft and instance root
+            string[] optFiles = new string[] {
+                Path.Combine(instPath, @".minecraft\options.txt"),
+                Path.Combine(instPath, @"options.txt")
+            };
+            foreach (string optFile in optFiles) {
+                try {
+                    if (File.Exists(optFile)) {
+                        string[] lines = File.ReadAllLines(optFile);
+                        bool hasSim = false;
+                        for (int i = 0; i < lines.Length; i++) {
+                            if (lines[i].StartsWith("simulationDistance:")) {
+                                lines[i] = "simulationDistance:2";
+                                hasSim = true;
+                            } else if (lines[i].StartsWith("renderDistance:")) {
+                                lines[i] = "renderDistance:2";
+                            } else if (lines[i].StartsWith("maxFps:")) {
+                                lines[i] = "maxFps:20";
+                            }
+                        }
+                        if (!hasSim) {
+                            var list = new System.Collections.Generic.List<string>(lines);
+                            list.Add("simulationDistance:2");
+                            lines = list.ToArray();
+                        }
+                        File.WriteAllLines(optFile, lines, Encoding.UTF8);
+                    }
+                } catch {}
+            }
         }
     }
 

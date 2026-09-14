@@ -1,4 +1,4 @@
-param(
+﻿param(
 [string]$InstanceName = "VPS-AFK-1",
 [string]$DiscordWebhook = "",
 [string]$PayUser = "",
@@ -505,9 +505,15 @@ New-Item -ItemType Directory -Path $InstanceDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ModsDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ResourcePacksDir -Force | Out-Null
-New-Item -ItemType Directory -Path $MeteorDir -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $MeteorDir "modules") -Force | Out-Null
-New-Item -ItemType Directory -Path (Join-Path $MeteorDir "presets") -Force | Out-Null
+$MeteorDirs = @(
+    (Join-Path $MinecraftDir "meteor-client"),
+    (Join-Path $InstanceDir "meteor-client")
+)
+foreach ($md in $MeteorDirs) {
+    New-Item -ItemType Directory -Path $md -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $md "modules") -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $md "presets") -Force | Out-Null
+}
 $patchesDir = Join-Path $InstanceDir "patches"
 if (-not (Test-Path $patchesDir)) { New-Item -ItemType Directory -Path $patchesDir -Force | Out-Null }
 $metaComps = @(
@@ -816,41 +822,17 @@ $noRenderBytes = [Convert]::FromBase64String($noRenderGzB64)
 $noRenderDecomp = Decompress-GZipBytes -Data $noRenderBytes
 $noRenderCompBytes = New-Object byte[] ($noRenderDecomp.Length - 19)
 [Array]::Copy($noRenderDecomp, 18, $noRenderCompBytes, 0, $noRenderCompBytes.Length)
-$destList = @(
-(Join-Path $MeteorDir "modules\No Render.nbt"),
-(Join-Path $MeteorDir "modules\no-render.nbt"),
-(Join-Path $MeteorDir "presets\no-render.nbt"),
-(Join-Path $MeteorDir "presets\no-render\default.nbt"),
-(Join-Path $MeteorDir "no-render.nbt")
-)
-foreach ($dst in $destList) {
-$p = Split-Path -Parent $dst
-if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }
-[System.IO.File]::WriteAllBytes($dst, $noRenderBytes)
-}
 $moduleCount = 1
 $spamCompBytes = $null
+$spamGzBytes = $null
 if ($EnableAutoPay -and (-not [string]::IsNullOrWhiteSpace($AutoPayCmd))) {
-$moduleCount = 2
-$spamCompBytes = Build-SpamNbtBytes -PayCommand $AutoPayCmd -Delay 400
-$spamStandaloneMs = New-Object System.IO.MemoryStream
-$spamStandaloneMs.WriteByte(10)
-$spamStandaloneMs.WriteByte(0); $spamStandaloneMs.WriteByte(0)
-$spamStandaloneMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
-$spamGzBytes = Compress-GZipBytes -Data ($spamStandaloneMs.ToArray())
-$spamDestList = @(
-(Join-Path $MeteorDir "modules\Spam.nbt"),
-(Join-Path $MeteorDir "modules\spam.nbt"),
-(Join-Path $MeteorDir "presets\spam.nbt"),
-(Join-Path $MeteorDir "presets\spam\default.nbt")
-)
-foreach ($sd in $spamDestList) {
-$sp = Split-Path -Parent $sd
-if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
-[System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
-}
-$spamB64 = [Convert]::ToBase64String($spamGzBytes)
-[System.IO.File]::WriteAllText((Join-Path $MeteorDir "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
+    $moduleCount = 2
+    $spamCompBytes = Build-SpamNbtBytes -PayCommand $AutoPayCmd -Delay 400
+    $spamStandaloneMs = New-Object System.IO.MemoryStream
+    $spamStandaloneMs.WriteByte(10)
+    $spamStandaloneMs.WriteByte(0); $spamStandaloneMs.WriteByte(0)
+    $spamStandaloneMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
+    $spamGzBytes = Compress-GZipBytes -Data ($spamStandaloneMs.ToArray())
 }
 $rootMs = New-Object System.IO.MemoryStream
 $rootMs.WriteByte(10) # TAG_Compound
@@ -865,19 +847,55 @@ $rootMs.WriteByte([byte](($moduleCount -shr 8) -band 0xFF))
 $rootMs.WriteByte([byte]($moduleCount -band 0xFF))
 $rootMs.Write($noRenderCompBytes, 0, $noRenderCompBytes.Length)
 if ($moduleCount -eq 2 -and $spamCompBytes) {
-$rootMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
+    $rootMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
 }
 $rootMs.WriteByte(0)
 $finalGzModules = Compress-GZipBytes -Data ($rootMs.ToArray())
-[System.IO.File]::WriteAllBytes((Join-Path $MeteorDir "modules.nbt"), $finalGzModules)
+
 $payCfgObj = @{
-user = $PayUser
-amount = $PayAmount
-enabled = $EnableAutoPay
-updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    user = $PayUser
+    amount = $PayAmount
+    enabled = $EnableAutoPay
+    updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 }
 $payJson = $payCfgObj | ConvertTo-Json -Compress
-[System.IO.File]::WriteAllText((Join-Path $MeteorDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
+
+# Ghi vao CA 2 thu muc (.minecraft\meteor-client va root meteor-client)
+foreach ($mTarget in $MeteorDirs) {
+    if (-not (Test-Path $mTarget)) { New-Item -ItemType Directory -Path $mTarget -Force | Out-Null }
+    
+    $destList = @(
+        (Join-Path $mTarget "modules\No Render.nbt"),
+        (Join-Path $mTarget "modules\no-render.nbt"),
+        (Join-Path $mTarget "presets\no-render.nbt"),
+        (Join-Path $mTarget "presets\no-render\default.nbt"),
+        (Join-Path $mTarget "no-render.nbt")
+    )
+    foreach ($dst in $destList) {
+        $p = Split-Path -Parent $dst
+        if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }
+        [System.IO.File]::WriteAllBytes($dst, $noRenderBytes)
+    }
+
+    if ($spamGzBytes) {
+        $spamDestList = @(
+            (Join-Path $mTarget "modules\Spam.nbt"),
+            (Join-Path $mTarget "modules\spam.nbt"),
+            (Join-Path $mTarget "presets\spam.nbt"),
+            (Join-Path $mTarget "presets\spam\default.nbt")
+        )
+        foreach ($sd in $spamDestList) {
+            $sp = Split-Path -Parent $sd
+            if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
+            [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+        }
+        $spamB64 = [Convert]::ToBase64String($spamGzBytes)
+        [System.IO.File]::WriteAllText((Join-Path $mTarget "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
+    }
+
+    [System.IO.File]::WriteAllBytes((Join-Path $mTarget "modules.nbt"), $finalGzModules)
+    [System.IO.File]::WriteAllText((Join-Path $mTarget "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
+}
 Write-Success "No-Render configuration installed & AUTO-ENABLED on Meteor Client!"
 if ($EnableAutoPay) {
 Write-Success "Auto Pay config ($AutoPayCmd | Delay: 400 | Disable On Leave/Disconnect OFF) AUTO-ENABLED!"
@@ -914,7 +932,7 @@ $optionsLines = @(
 "version:3955",
 "graphicsMode:0",
 "renderDistance:2",
-"simulationDistance:4",
+"simulationDistance:2",
 "maxFps:20",
 "enableVsync:false",
 "guiScale:0",
@@ -940,6 +958,8 @@ $optionsLines = @(
 'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip"]'
 )
 [System.IO.File]::WriteAllLines($optionsFile, $optionsLines, [System.Text.Encoding]::UTF8)
+$rootOpt = Join-Path $InstanceDir "options.txt"
+[System.IO.File]::WriteAllLines($rootOpt, $optionsLines, [System.Text.Encoding]::UTF8)
 
 # Ghi file cau hinh Sodium toi uu hoa CPU cho VPS
 $sodiumOptFile = Join-Path $ConfigDir "sodium-options.json"

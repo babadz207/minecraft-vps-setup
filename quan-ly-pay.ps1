@@ -235,36 +235,77 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
 
     # Ghi vao TAT CA cac Instance co san (VPS-AFK-1, VPS-AFK-2, VPS-AFK-3...)
     foreach ($inst in $targetInstances) {
-        $mDir = Join-Path $inst.FullName ".minecraft\meteor-client"
-        if (-not (Test-Path $mDir)) { New-Item -ItemType Directory -Path $mDir -Force | Out-Null }
+        $mDirs = @(
+            (Join-Path $inst.FullName ".minecraft\meteor-client"),
+            (Join-Path $inst.FullName "meteor-client")
+        )
+        foreach ($mDir in $mDirs) {
+            if (-not (Test-Path $mDir)) { New-Item -ItemType Directory -Path $mDir -Force | Out-Null }
 
-        if ($spamGzBytes) {
-            $spamDestList = @(
-                (Join-Path $mDir "modules\Spam.nbt"),
-                (Join-Path $mDir "modules\spam.nbt"),
-                (Join-Path $mDir "presets\spam.nbt"),
-                (Join-Path $mDir "presets\spam\default.nbt")
+            # Standalone no-render files
+            $noRenderDestList = @(
+                (Join-Path $mDir "modules\No Render.nbt"),
+                (Join-Path $mDir "modules\no-render.nbt"),
+                (Join-Path $mDir "presets\no-render.nbt"),
+                (Join-Path $mDir "presets\no-render\default.nbt")
             )
-            foreach ($sd in $spamDestList) {
-                $sp = Split-Path -Parent $sd
-                if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
-                [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+            foreach ($nd in $noRenderDestList) {
+                $np = Split-Path -Parent $nd
+                if (-not (Test-Path $np)) { New-Item -ItemType Directory -Path $np -Force | Out-Null }
+                [System.IO.File]::WriteAllBytes($nd, $noRenderBytes)
             }
-            $spamB64 = [Convert]::ToBase64String($spamGzBytes)
-            [System.IO.File]::WriteAllText((Join-Path $mDir "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
+
+            if ($spamGzBytes) {
+                $spamDestList = @(
+                    (Join-Path $mDir "modules\Spam.nbt"),
+                    (Join-Path $mDir "modules\spam.nbt"),
+                    (Join-Path $mDir "presets\spam.nbt"),
+                    (Join-Path $mDir "presets\spam\default.nbt")
+                )
+                foreach ($sd in $spamDestList) {
+                    $sp = Split-Path -Parent $sd
+                    if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
+                    [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+                }
+                $spamB64 = [Convert]::ToBase64String($spamGzBytes)
+                [System.IO.File]::WriteAllText((Join-Path $mDir "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
+            }
+
+            [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalGzModules)
+
+            # Save pay_config.json
+            $cfg = @{
+                user = $TargetUser
+                amount = $TargetAmount
+                enabled = $Enable
+                updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+            }
+            $json = $cfg | ConvertTo-Json -Compress
+            [System.IO.File]::WriteAllText((Join-Path $mDir "pay_config.json"), $json, [System.Text.Encoding]::UTF8)
         }
 
-        [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalGzModules)
-
-        # Save pay_config.json
-        $cfg = @{
-            user = $TargetUser
-            amount = $TargetAmount
-            enabled = $Enable
-            updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+        # Update options.txt in both .minecraft and root
+        $optDirs = @(
+            (Join-Path $inst.FullName ".minecraft"),
+            $inst.FullName
+        )
+        foreach ($od in $optDirs) {
+            $optPath = Join-Path $od "options.txt"
+            $optMap = @{}
+            if (Test-Path $optPath) {
+                Get-Content $optPath | ForEach-Object {
+                    if ($_ -match '^([^:]+):(.*)$') {
+                        $optMap[$matches[1].Trim()] = $matches[2].Trim()
+                    }
+                }
+            }
+            $optMap["renderDistance"] = "2"
+            $optMap["simulationDistance"] = "2"
+            $optMap["maxFps"] = "20"
+            $lines = @()
+            foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }
+            [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
         }
-        $json = $cfg | ConvertTo-Json -Compress
-        [System.IO.File]::WriteAllText((Join-Path $mDir "pay_config.json"), $json, [System.Text.Encoding]::UTF8)
     }
 }
 
