@@ -301,7 +301,7 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
             }
             $optMap["renderDistance"] = "32"
             $optMap["simulationDistance"] = "32"
-            $optMap["maxFps"] = "20"
+            $optMap["maxFps"] = "260"
             $lines = @()
             foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }
             [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)

@@ -937,7 +937,7 @@ $optionsLines = @(
 "graphicsMode:0",
 "renderDistance:32",
 "simulationDistance:32",
-"maxFps:20",
+"maxFps:260",
 "enableVsync:false",
 "guiScale:0",
 "fullscreen:false",
