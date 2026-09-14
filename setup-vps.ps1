@@ -21,8 +21,8 @@ if ([Win32.ConsoleModeHelper]::GetConsoleMode($hIn, [ref]$m)) {
 }
 } catch {}
 Write-Host ""
-Write-Host "   [+] DANG LOAD BO CAI DAT MINECRAFT VPS 24/7..." -ForegroundColor Yellow
-Write-Host "   [!] VUI LONG CHO GIAY LAT (DANG KHOA PHIM BAM)..." -ForegroundColor DarkGray
+Write-Host "   [+] LOADING MINECRAFT VPS 24/7 SETUP WIZARD..." -ForegroundColor Yellow
+Write-Host "   [!] PLEASE WAIT A MOMENT (INITIALIZING)..." -ForegroundColor DarkGray
 $flushUntil = [DateTime]::Now.AddSeconds(1.5)
 while ([DateTime]::Now -lt $flushUntil) {
 try {
@@ -87,7 +87,7 @@ param(
 [string]$OutFile,
 [string]$Desc
 )
-Flush-KeyboardBuffer; Write-Host "  -> [⏳ DANG TAI]: $Desc..." -ForegroundColor DarkGray
+Flush-KeyboardBuffer; Write-Host "  -> [DOWNLOADING]: $Desc..." -ForegroundColor DarkGray
 $parent = Split-Path -Parent $OutFile
 if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
 $dlOk = $false
@@ -106,7 +106,7 @@ Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
 if (-not $dlOk -and ($Url -match "github\.com") -and (Get-Command "curl.exe" -ErrorAction SilentlyContinue)) {
 try {
 $mirrorUrl = "https://ghproxy.net/" + $Url
-Write-Host "     Thu tai qua mirror toc do cao: $mirrorUrl..." -ForegroundColor DarkYellow
+Write-Host "     Retrying via high-speed mirror: $mirrorUrl..." -ForegroundColor DarkYellow
 & curl.exe -k -L --ssl-no-revoke --http1.1 --connect-timeout 15 --max-time 300 -# -A "Mozilla/5.0" "$mirrorUrl" -o "$OutFile"
 if ($LASTEXITCODE -eq 0 -and (Test-Path $OutFile) -and ((Get-Item $OutFile).Length -gt 100)) {
 $dlOk = $true
@@ -144,11 +144,11 @@ return $false
 }
 } catch {}
 $mb = [math]::Round($size / 1048576, 2)
-Write-Host "     Hoan tat ($mb MB)" -ForegroundColor DarkGreen
+Write-Host "     Completed ($mb MB)" -ForegroundColor DarkGreen
 return $true
 }
 }
-Write-Err "Khong the tai file $Desc hoac file bi loi."
+Write-Err "Failed to download $Desc or file is corrupted."
 return $false
 }
 function Download-DriveFile {
@@ -179,23 +179,23 @@ if ($wh) { $existWh = $wh.Trim() }
 if (-not [string]::IsNullOrWhiteSpace($DiscordWebhook)) { $existWh = $DiscordWebhook.Trim() }
 $askNewWh = $false
 if (-not [string]::IsNullOrWhiteSpace($existWh)) {
-Write-Host "=== CAU HINH DISCORD WEBHOOK AUTOSELL ===" -ForegroundColor Yellow
-Write-Host "  Dang co san Webhook: $existWh" -ForegroundColor Cyan
-Flush-KeyboardBuffer; $useWh = Read-Host "Tiep tuc su dung Webhook nay khong? (y/n)"
+Write-Host "=== CONFIGURE DISCORD WEBHOOK (AUTOSELL ALERTS) ===" -ForegroundColor Yellow
+Write-Host "  Existing Webhook detected: $existWh" -ForegroundColor Cyan
+Flush-KeyboardBuffer; $useWh = Read-Host "Keep using this existing Webhook? (y/n)"
 if ($useWh -match '^(?i)y(es)?$') {
 $DiscordWebhook = $existWh
-Write-Host " -> [OK] Tiep tuc su dung Webhook da luu" -ForegroundColor Green
+Write-Host " -> [OK] Keeping existing Webhook" -ForegroundColor Green
 } else { $askNewWh = $true }
 } else { $askNewWh = $true }
 if ($askNewWh) {
 try {
-Flush-KeyboardBuffer; $inWh = Read-Host "Nhap Discord Webhook moi (hoac nhan ENTER de bo qua)"
+Flush-KeyboardBuffer; $inWh = Read-Host "Enter Discord Webhook URL (or press ENTER to skip)"
 if (-not [string]::IsNullOrWhiteSpace($inWh)) {
 $DiscordWebhook = $inWh.Trim()
-Write-Host " -> Da ghi nhan Webhook moi!" -ForegroundColor Green
+Write-Host " -> [OK] New Webhook registered!" -ForegroundColor Green
 } else {
 $DiscordWebhook = ""
-Write-Host " -> Bo qua Webhook (Khong dung Webhook)." -ForegroundColor DarkGray
+Write-Host " -> Skipped Webhook (Discord alerts disabled)." -ForegroundColor DarkGray
 }
 } catch {}
 }
@@ -216,22 +216,22 @@ $existPayUser = $PayUser.Trim()
 if (-not [string]::IsNullOrWhiteSpace($PayAmount)) { $existPayAmt = $PayAmount.Trim() }
 }
 if (-not [string]::IsNullOrWhiteSpace($existPayUser) -and -not [string]::IsNullOrWhiteSpace($existPayAmt)) {
-Write-Host "=== CAU HINH AUTO PAY (DONUTSMP) ===" -ForegroundColor Yellow
-Write-Host "  Dang co san: /pay $existPayUser $existPayAmt" -ForegroundColor Cyan
-Flush-KeyboardBuffer; $useEx = Read-Host "Tiep tuc su dung /pay $existPayUser $existPayAmt khong? (y/n)"
+Write-Host "=== CONFIGURE AUTO PAY (DONUTSMP) ===" -ForegroundColor Yellow
+Write-Host "  Existing Auto Pay: /pay $existPayUser $existPayAmt" -ForegroundColor Cyan
+Flush-KeyboardBuffer; $useEx = Read-Host "Keep using /pay $existPayUser $existPayAmt? (y/n)"
 if ($useEx -match '^(?i)y(es)?$') {
 $PayUser = $existPayUser; $PayAmount = $existPayAmt; $AutoPayCmd = "/pay $PayUser $PayAmount"; $EnableAutoPay = $true
-Write-Host " -> [OK] Tiep tuc su dung: $AutoPayCmd" -ForegroundColor Green
+Write-Host " -> [OK] Keeping Auto Pay: $AutoPayCmd" -ForegroundColor Green
 } else { $askNewPay = $true }
 } else { $askNewPay = $true }
 if ($askNewPay) {
 try {
-Flush-KeyboardBuffer; $inU = Read-Host "Nhap ten user muon Auto Pay (hoac nhan ENTER de bo qua)"
+Flush-KeyboardBuffer; $inU = Read-Host "Enter recipient username for Auto Pay (or press ENTER to skip)"
 if (-not [string]::IsNullOrWhiteSpace($inU)) {
 $targetUser = $inU.Trim()
 $targetAmount = ""
 while ($true) {
-Flush-KeyboardBuffer; $inA = Read-Host "Nhap so tien muon pay cho $targetUser (vi du: 1M, 2M, 2000000, 500k...)"
+Flush-KeyboardBuffer; $inA = Read-Host "Enter payment amount for $targetUser (e.g. 10, 500k, 1M, 2M)"
 $amtTrim = $inA.Trim()
 if ($amtTrim -match '^[0-9]+(\.[0-9]+)?[kKmMbBtT]?$') {
 $nPart = $amtTrim -replace '[kKmMbBtT]$', ''
@@ -243,18 +243,18 @@ $targetAmount = $amtTrim.Substring(0, $amtTrim.Length - 1) + $amtTrim.Substring(
 break
 }
 }
-Write-Host " [!] Dinh dang khong hop le! (Vi du: 1M, 2M, 2000000, 500k...)" -ForegroundColor Red
+Write-Host " [!] Invalid amount format! (Example: 10, 500k, 1M, 2M)" -ForegroundColor Red
 }
 $cmdPreview = "/pay $targetUser $targetAmount"
-Write-Host "  -> Lenh: $cmdPreview (Delay: 400 ticks)" -ForegroundColor Yellow
-Flush-KeyboardBuffer; $cfm = Read-Host "Xac nhan cau hinh Auto Pay nay? (y/n)"
+Write-Host "  -> Command: $cmdPreview (Delay: 400 ticks / 20s)" -ForegroundColor Yellow
+Flush-KeyboardBuffer; $cfm = Read-Host "Confirm this Auto Pay configuration? (y/n)"
 if ($cfm -match '^(?i)y(es)?$') {
 $PayUser = $targetUser; $PayAmount = $targetAmount; $AutoPayCmd = $cmdPreview; $EnableAutoPay = $true
-Write-Host " -> [OK] Da xac nhan: $AutoPayCmd" -ForegroundColor Green
+Write-Host " -> [OK] Confirmed: $AutoPayCmd" -ForegroundColor Green
 }
 } else {
 $EnableAutoPay = $false; $AutoPayCmd = ""
-Write-Host " -> Bo qua Auto Pay (Khong bat spam)." -ForegroundColor DarkGray
+Write-Host " -> Skipped Auto Pay (Module disabled)." -ForegroundColor DarkGray
 }
 } catch {}
 }
@@ -273,16 +273,16 @@ $cpuCores = (Get-CimInstance Win32_Processor | Measure-Object -Property NumberOf
 try { $cpuCores = (Get-WmiObject Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum } catch {}
 }
 if (-not $cpuCores -or $cpuCores -le 0) { $cpuCores = 4 }
-Write-Host "   NHẬN DIỆN CẤU HÌNH VPS: $cpuCores CPU Cores | $totalRamGB GB RAM" -ForegroundColor Yellow
+Write-Host "   DETECTED VPS HARDWARE: $cpuCores CPU Cores | $totalRamGB GB RAM" -ForegroundColor Yellow
 $detectedMode = if ($cpuCores -ge 6 -or $totalRamGB -ge 7) { "8-8" } else { "4-4" }
-Write-Host " -> He thong tu dong nhan dien: VPS $detectedMode" -ForegroundColor Green
-Write-Host "    [1] VPS 4-4: Mac dinh 1 Instance duy nhat (KHONG gioi han RAM/CPU)" -ForegroundColor White
-Write-Host "    [2] VPS 8-8: Toi da 3 Instance (TU DONG GIOI HAN: 2GB RAM & 2 CPU Cores / Instance)" -ForegroundColor White
+Write-Host " -> Recommended Profile: VPS $detectedMode" -ForegroundColor Green
+Write-Host "    [1] VPS 4-4: Standard 1 Instance (Full RAM/CPU allocation)" -ForegroundColor White
+Write-Host "    [2] VPS 8-8: Multi-Instance up to 3 (Auto-limited: 2GB RAM & 2 CPU Cores / Instance)" -ForegroundColor White
 Write-Host ""
 $vpsModeChoice = ""
 try {
 $defaultNum = if ($detectedMode -eq "8-8") { "2" } else { "1" }
-Flush-KeyboardBuffer; $inputChoice = Read-Host "Chon che do VPS (1 hoac 2, nhan ENTER de lay [$defaultNum])"
+Flush-KeyboardBuffer; $inputChoice = Read-Host "Select VPS Profile (1 or 2, press ENTER for [$defaultNum])"
 if (-not [string]::IsNullOrWhiteSpace($inputChoice)) {
 $vpsModeChoice = $inputChoice.Trim()
 } else {
@@ -298,38 +298,38 @@ $LaunchDelaySeconds = 25
 if ($vpsModeChoice -eq "2") {
 $VpsMode = "8-8"
 $LimitRamCpu = $true
-Write-Host " -> Che do da chon: VPS 8-8 (Moi Instance 1 Account - Tu gioi han 2GB RAM & 2 CPU / Instance)" -ForegroundColor Green
+Write-Host " -> Selected: VPS 8-8 (Multi-Instance: 2GB RAM & 2 CPU limit per instance)" -ForegroundColor Green
 $inputInstCount = ""
 try {
-Flush-KeyboardBuffer; $inputInstCount = Read-Host "Nhap so luong Instance muon tao (1, 2 hoac 3, nhan ENTER de lay toi da [3])"
+Flush-KeyboardBuffer; $inputInstCount = Read-Host "Enter number of Instances to create (1-3, press ENTER for [3])"
 } catch {}
 if ($inputInstCount -match '^[1-3]$') {
 $InstanceCount = [int]$inputInstCount
 } else {
 $InstanceCount = 3
 }
-Write-Host " -> So luong Instance se tao: $InstanceCount (Toi da 3)" -ForegroundColor Green
+Write-Host " -> Instances to create: $InstanceCount (Max 3)" -ForegroundColor Green
 $inputDelay = ""
 try {
-Flush-KeyboardBuffer; $inputDelay = Read-Host "Nhap thoi gian delay giua cac bot de tranh tran RAM (giay, nhan ENTER de lay [25])"
+Flush-KeyboardBuffer; $inputDelay = Read-Host "Enter stagger delay between instances (seconds, press ENTER for [25])"
 } catch {}
 if ($inputDelay -match '^\d+$' -and [int]$inputDelay -ge 5) {
 $LaunchDelaySeconds = [int]$inputDelay
 } else {
 $LaunchDelaySeconds = 25
 }
-Write-Host " -> Thoi gian delay giua cac bot: $LaunchDelaySeconds giay (Chong tran RAM)" -ForegroundColor Green
+Write-Host " -> Stagger launch delay: $LaunchDelaySeconds seconds (Prevents RAM spikes)" -ForegroundColor Green
 } else {
 $VpsMode = "4-4"
 $InstanceCount = 1
 $LimitRamCpu = $false
 $LaunchDelaySeconds = 0
-Write-Host " -> Che do da chon: VPS 4-4 (1 Instance mac dinh, KHONG gioi han RAM/CPU)" -ForegroundColor Green
+Write-Host " -> Selected: VPS 4-4 (Single Instance, full system resources)" -ForegroundColor Green
 }
-Write-Host "Thu muc cai dat: $BaseDir" -ForegroundColor Cyan
+Write-Host "Installation directory: $BaseDir" -ForegroundColor Cyan
 New-Item -ItemType Directory -Path $BaseDir -Force | Out-Null
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
-Write-Title "BUOC 1: CAI DAT VISUAL C++ REDISTRIBUTABLE (x64)"
+Write-Title "STEP 1: INSTALL VISUAL C++ REDISTRIBUTABLE (x64)"
 $vcUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
 $vcFile = Join-Path $TempDir "vc_redist.x64.exe"
 $isVcInstalled = $false
@@ -341,38 +341,38 @@ if (-not $isVcInstalled -and (Test-Path "C:\Windows\System32\vcruntime140.dll") 
 $isVcInstalled = $true
 }
 if ($isVcInstalled) {
-Write-Success "Visual C++ 2015-2022 x64 da duoc cai dat tren he thong, bo qua tai xuong!"
+Write-Success "Visual C++ 2015-2022 x64 is already installed, skipping download!"
 } else {
-Write-Step "1/10" "Dang kiem tra va tai Visual C++ Redistributable..."
+Write-Step "1/11" "Checking and downloading Visual C++ Redistributable..."
 $downloadVc = Download-FileWithCurl -Url $vcUrl -OutFile $vcFile -Desc "Visual C++ 2015-2022 x64"
 if ($downloadVc) {
-Write-Step "1/10" "Dang cai dat Visual C++ Redistributable (Silent Mode)..."
+Write-Step "1/11" "Installing Visual C++ Redistributable (Silent Mode)..."
 try {
 $proc = Start-Process -FilePath $vcFile -ArgumentList "/install /quiet /norestart" -Wait -PassThru
-Write-Success "Visual C++ Redistributable da duoc cai dat (Exit Code: $($proc.ExitCode))"
+Write-Success "Visual C++ Redistributable installed successfully (Exit Code: $($proc.ExitCode))"
 } catch {
-Write-Warn "Khong the chay trinh cai dat VC++ tu dong: $_"
+Write-Warn "Failed to run VC++ installer automatically: $_"
 }
 }
 }
-Write-Title "BUOC 2: CAI DAT PRISM LAUNCHER (OFFICIAL PRISMLAUNCHER.ORG)"
+Write-Title "STEP 2: INSTALL PRISM LAUNCHER (OFFICIAL PRISMLAUNCHER.ORG)"
 $prismExe = Join-Path $PrismDir "prismlauncher.exe"
 if (Test-Path $prismExe) {
-Write-Success "Prism Launcher da ton tai tai: $prismExe"
+Write-Success "Prism Launcher already exists at: $prismExe"
 } else {
 $localPrism = Get-ChildItem -Path "$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop" -Filter "PrismLauncher*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $localPrism) {
 $localPrism = Get-ChildItem -Path "$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop" -Filter "PrismLauncher*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
 }
 if ($localPrism) {
-Write-Success "Phat hien file Prism Launcher san co tai: $($localPrism.FullName)"
+Write-Success "Found local Prism Launcher installer at: $($localPrism.FullName)"
 if ($localPrism.Extension -eq ".exe") {
 Start-Process -FilePath $localPrism.FullName -ArgumentList "/S /D=$PrismDir" -Wait
 } else {
 Expand-Archive -Path $localPrism.FullName -DestinationPath $PrismDir -Force
 }
 } else {
-Write-Step "2/10" "Dang tai Prism Launcher Installer tu trang chu prismlauncher.org..."
+Write-Step "2/11" "Downloading Prism Launcher Installer from prismlauncher.org..."
 $prismSetupExe = Join-Path $TempDir "PrismLauncher-Setup.exe"
 $prismDlUrl = "https://github.com/PrismLauncher/PrismLauncher/releases/download/11.1.0/PrismLauncher-Windows-MSVC-Setup-11.1.0.exe"
 try {
@@ -383,10 +383,10 @@ if ($asset) { $prismDlUrl = $asset.browser_download_url }
 } catch {}
 $dlSuccess = Download-FileWithCurl -Url $prismDlUrl -OutFile $prismSetupExe -Desc "Prism Launcher Installer"
 if ($dlSuccess -and (Test-Path $prismSetupExe)) {
-Write-Step "2/10" "Dang cai dat Prism Launcher (Silent Mode)..."
+Write-Step "2/11" "Installing Prism Launcher (Silent Mode)..."
 Start-Process -FilePath $prismSetupExe -ArgumentList "/S /D=$PrismDir" -Wait
 } else {
-Write-Warn "Khong the cai Setup, chuyen sang tai ban Portable zip..."
+Write-Warn "Installer execution failed, falling back to Portable archive..."
 $prismZip = Join-Path $TempDir "PrismLauncher-Portable.zip"
 $zipUrl = "https://github.com/PrismLauncher/PrismLauncher/releases/download/11.1.0/PrismLauncher-Windows-MSVC-Portable-11.1.0.zip"
 Download-FileWithCurl -Url $zipUrl -OutFile $prismZip -Desc "Prism Launcher Portable Zip"
@@ -409,49 +409,49 @@ $initAccountsJson = @'
 '@
 [System.IO.File]::WriteAllText($accountsJsonFile, $initAccountsJson, [System.Text.Encoding]::UTF8)
 }
-Write-Success "Prism Launcher da san sang o che do Portable tai: $PrismDir"
-Write-Title "BUOC 3: CAI DAT JAVA 21 PORTABLE (ADOPTIUM TEMURIN)"
+Write-Success "Prism Launcher is ready in Portable mode at: $PrismDir"
+Write-Title "STEP 3: INSTALL JAVA 21 JRE PORTABLE (ADOPTIUM TEMURIN)"
 $javaDir = Join-Path $PrismDir "runtime\java-21"
 $javawExe = $null
 $foundJavaw = Get-ChildItem -Path $javaDir -Filter "javaw.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($foundJavaw) {
 $javawExe = $foundJavaw.FullName
-Write-Success "Java 21 da ton tai tai: $javawExe"
+Write-Success "Java 21 already exists at: $javawExe"
 } else {
-Write-Step "3/10" "Dang tai Java 21 JRE Portable tu Adoptium Temurin..."
+Write-Step "3/11" "Downloading Java 21 JRE Portable from Adoptium Temurin..."
 $javaZip = Join-Path $TempDir "OpenJDK21-JRE.zip"
 $javaUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse?project=jdk"
 Download-FileWithCurl -Url $javaUrl -OutFile $javaZip -Desc "Java 21 OpenJDK JRE x64"
-Write-Step "3/10" "Dang giai nen Java 21..."
+Write-Step "3/11" "Extracting Java 21 runtime..."
 New-Item -ItemType Directory -Path $javaDir -Force | Out-Null
 Expand-Archive -Path $javaZip -DestinationPath $javaDir -Force
 $foundJavaw = Get-ChildItem -Path $javaDir -Filter "javaw.exe" -Recurse | Select-Object -First 1
 if ($foundJavaw) {
 $javawExe = $foundJavaw.FullName
-Write-Success "Java 21 da duoc cai dat thanh cong tai: $javawExe"
+Write-Success "Java 21 installed successfully at: $javawExe"
 } else {
-Write-Err "Khong tim thay javaw.exe sau khi giai nen Java 21!"
+Write-Err "javaw.exe not found after extracting Java 21!"
 }
 }
-Write-Title "BUOC 4: CAI DAT MESA3D SOFTWARE OPENGL (FIX LOI GLFW 65542 TREN VPS)"
-Write-Host "Mesa3D su dung CPU de gia lap OpenGL 4.5/4.6 giup Minecraft chay muot ma tren VPS khong GPU." -ForegroundColor DarkCyan
+Write-Title "STEP 4: CONFIGURE MESA3D SOFTWARE OPENGL (FIX GLFW 65542 ON NON-GPU VPS)"
+Write-Host "Mesa3D uses CPU llvmpipe to emulate OpenGL 4.5/4.6, allowing Minecraft to run on Non-GPU VPS." -ForegroundColor DarkCyan
 $javaBin = if ($javawExe) { Split-Path -Parent $javawExe } else { $null }
 $javaOpengl = if ($javaBin) { Join-Path $javaBin "opengl32.dll" } else { $null }
 $prismOpengl = Join-Path $PrismDir "opengl32.dll"
 $openglReady = $false
 if ($javaOpengl -and (Test-Path $javaOpengl) -and ((Get-Item $javaOpengl).Length -gt 10000000) -and (Test-Path $prismOpengl) -and ((Get-Item $prismOpengl).Length -gt 10000000)) {
 $openglReady = $true
-Write-Success "Mesa3D OpenGL da duoc tiem san vao Java va Prism Launcher, bo qua tai xuong!"
+Write-Success "Mesa3D OpenGL already deployed to Java and Prism Launcher, skipping download!"
 } elseif ($prismOpengl -and (Test-Path $prismOpengl) -and ((Get-Item $prismOpengl).Length -gt 10000000) -and $javaBin) {
 Copy-Item -Path $prismOpengl -Destination $javaOpengl -Force
 New-Item -ItemType File -Path (Join-Path $javaBin "javaw.exe.local") -Force | Out-Null
 New-Item -ItemType File -Path (Join-Path $javaBin "java.exe.local") -Force | Out-Null
 $openglReady = $true
-Write-Success "Da copy Mesa3D opengl32.dll tu Prism sang Java bin: $javaBin"
+Write-Success "Copied Mesa3D opengl32.dll from Prism to Java bin: $javaBin"
 } elseif ($javaOpengl -and (Test-Path $javaOpengl) -and ((Get-Item $javaOpengl).Length -gt 10000000)) {
 Copy-Item -Path $javaOpengl -Destination $prismOpengl -Force
 $openglReady = $true
-Write-Success "Da copy Mesa3D opengl32.dll tu Java sang Prism Launcher"
+Write-Success "Copied Mesa3D opengl32.dll from Java to Prism Launcher"
 }
 if (-not $openglReady) {
 $mesa7z = Join-Path $TempDir "mesa-llvmpipe-clean.7z"
@@ -463,7 +463,7 @@ Download-FileWithCurl -Url "https://www.7-zip.org/a/7zr.exe" -OutFile $zrExe -De
 $mmozeikoUrl = "https://github.com/mmozeiko/build-mesa/releases/download/26.2.2/mesa-llvmpipe-x64-26.2.2.7z"
 Download-FileWithCurl -Url $mmozeikoUrl -OutFile $mesa7z -Desc "Mesa3D LLVMpipe x64 Standalone" | Out-Null
 if (Test-Path $zrExe) {
-Write-Step "4/10" "Dang trich xuat opengl32.dll bang 7zr..."
+Write-Step "4/11" "Extracting opengl32.dll using 7zr..."
 & $zrExe e "$mesa7z" "-o$TempDir" "opengl32.dll" -r -y | Out-Null
 $candidate = Join-Path $TempDir "opengl32.dll"
 if (Test-Path $candidate) { $openglDll = $candidate }
@@ -474,20 +474,20 @@ $candidate = Join-Path $TempDir "opengl32.dll"
 if (Test-Path $candidate) { $openglDll = $candidate }
 }
 if ($openglDll -and (Test-Path $openglDll)) {
-Write-Step "4/10" "Dang tiem opengl32.dll vao Java runtime va Prism Launcher..."
+Write-Step "4/11" "Injecting opengl32.dll into Java runtime and Prism Launcher..."
 if ($javaBin) {
 Copy-Item -Path $openglDll -Destination (Join-Path $javaBin "opengl32.dll") -Force
 New-Item -ItemType File -Path (Join-Path $javaBin "javaw.exe.local") -Force | Out-Null
 New-Item -ItemType File -Path (Join-Path $javaBin "java.exe.local") -Force | Out-Null
-Write-Success "Da tiem Mesa3D opengl32.dll vao Java bin: $javaBin"
+Write-Success "Injected Mesa3D opengl32.dll into Java bin: $javaBin"
 }
 Copy-Item -Path $openglDll -Destination (Join-Path $PrismDir "opengl32.dll") -Force
-Write-Success "Da tiem Mesa3D opengl32.dll vao Prism Launcher"
+Write-Success "Injected Mesa3D opengl32.dll into Prism Launcher"
 } else {
-Write-Err "Khong the trich xuat opengl32.dll! Minecraft co the se bao loi GLFW 65542 neu VPS thieu driver OpenGL."
+Write-Err "Failed to extract opengl32.dll! Minecraft may report GLFW 65542 if VPS lacks OpenGL drivers."
 }
 }
-Write-Title "BUOC 5: KHOI TAO INSTANCE FABRIC 1.21.11 CHO PRISM LAUNCHER"
+Write-Title "STEP 5: INITIALIZE FABRIC 1.21.11 PRISM INSTANCE"
 New-Item -ItemType Directory -Path $InstanceDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ModsDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
@@ -556,23 +556,23 @@ $instanceCfgLines = @(
 )
 [System.IO.File]::WriteAllLines((Join-Path $InstanceDir "instance.cfg"), $instanceCfgLines, [System.Text.Encoding]::UTF8)
 if ($LimitRamCpu) {
-Write-Success "Instance $InstanceName da duoc tao thanh cong (Gioi han: 2GB RAM & 2 CPU Cores - donutsmp.net)!"
+Write-Success "Instance $InstanceName created successfully (Limited: 2GB RAM & 2 CPU Cores - donutsmp.net)!"
 } else {
-Write-Success "Instance $InstanceName da duoc tao thanh cong (KHONG gioi han RAM/CPU - donutsmp.net)!"
+Write-Success "Instance $InstanceName created successfully (Standard 1 Instance - donutsmp.net)!"
 }
 $serversDatFile = Join-Path $MinecraftDir "servers.dat"
 if (-not (Test-Path $serversDatFile)) {
 $serversDatB64 = "CgAACQAHc2VydmVycwoAAAABCAACaXAADGRvbnV0c21wLm5ldAgABG5hbWUACERvbnV0U01QAQAOYWNjZXB0VGV4dHVyZXMBAAA="
 [System.IO.File]::WriteAllBytes($serversDatFile, [Convert]::FromBase64String($serversDatB64))
-Write-Success "Da cau hinh servers.dat (DonutSMP - donutsmp.net)"
+Write-Success "Configured servers.dat (DonutSMP - donutsmp.net)"
 } else {
-Write-Success "servers.dat da ton tai, giu nguyen danh sach server!"
+Write-Success "servers.dat already exists, keeping existing server list!"
 }
 $prismCfgFile = Join-Path $PrismDir "prismlauncher.cfg"
 $currentHost = [System.Net.Dns]::GetHostName()
 $prismCfgLines = @("[General]","ConfigVersion=1.2","Language=en_US","ApplicationTheme=system","IconTheme=pe_colored","LastHostname=$currentHost","JavaPath=$javaPathEscaped","MinMemAlloc=512","MaxMemAlloc=1536","AutomaticJavaDownload=true","AutomaticJavaSwitch=true","UserAskedAboutAutomaticJavaDownload=true","Analytics=false","CheckForUpdates=false")
 [System.IO.File]::WriteAllLines($prismCfgFile, $prismCfgLines, [System.Text.Encoding]::UTF8)
-Write-Success "Da cau hinh prismlauncher.cfg (Bo qua 100% Quick Setup Wizard)"
+Write-Success "Configured prismlauncher.cfg (Bypassed Quick Setup Wizard)"
 $accountsFile = Join-Path $PrismDir "accounts.json"
 if (-not (Test-Path $accountsFile)) {
 $accountsData = @{
@@ -581,7 +581,7 @@ formatVersion = 3
 }
 $accJsonStr = $accountsData | ConvertTo-Json -Depth 10
 [System.IO.File]::WriteAllText($accountsFile, $accJsonStr, [System.Text.Encoding]::UTF8)
-Write-Success "Da khoi tao accounts.json san sang dang nhap Microsoft cho donutsmp.net"
+Write-Success "Initialized accounts.json ready for Microsoft login"
 }
 Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
 function Test-ValidJar([string]$p) {
@@ -593,7 +593,8 @@ $z.Dispose()
 return ($c -gt 0)
 } catch { return $false }
 }
-Write-Title "BUOC 6: TAI 18 MODS TU GOOGLE DRIVE"
+Write-Title "STEP 6: DOWNLOAD OPTIMIZED MODS (17 MODS)"
+Write-Host "  Note: Iris Shader (18th mod) is intentionally excluded to prevent crashes on Non-GPU VPS (Mesa3D Software OpenGL)." -ForegroundColor DarkCyan
 $modsList = @(
 @{ Id = "1P89LBaIvgWtNFi3YiTEu3WYmnosKhhd5"; Name = "AutoRotate-1.1-R2-nohwid.jar" },
 @{ Id = "1ncv-dODi1VEmxqbnVwdQsnybdomoGSiL"; Name = "autosell.jar" },
@@ -622,37 +623,37 @@ foreach ($mod in $modsList) {
 $count++
 $targetModFile = Join-Path $ModsDir $mod.Name
 if (Test-ValidJar $targetModFile) {
-Write-Host "  [$count/$($modsList.Count)] Da co san & nguyen ven: $($mod.Name) (Bo qua)" -ForegroundColor DarkGray
+Write-Host "  [$count/$($modsList.Count)] Already present & verified: $($mod.Name) (Skipped)" -ForegroundColor DarkGray
 } else {
 if (Test-Path $targetModFile) {
-Write-Host "  [!] Phat hien mod loi hoac chua xong: $($mod.Name) -> Dang tai lai..." -ForegroundColor Yellow
+Write-Host "  [!] Corrupt or incomplete mod detected: $($mod.Name) -> Re-downloading..." -ForegroundColor Yellow
 Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
 }
 Write-Host "  [$count/$($modsList.Count)] " -ForegroundColor Yellow -NoNewline
 Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc $mod.Name | Out-Null
 if (-not (Test-ValidJar $targetModFile)) {
 Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
-Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc "$($mod.Name) (Thu lai)" | Out-Null
+Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc "$($mod.Name) (Retry)" | Out-Null
 }
 }
 }
-Write-Success "Tat ca 18 Mods da duoc tai vao: $ModsDir"
-Write-Title "BUOC 7: CAI DAT CONFIG AUTO SELL (MOD AUTOSELL)"
+Write-Success "All 17 optimized mods installed successfully into: $ModsDir"
+Write-Title "STEP 7: CONFIGURE AUTO SELL MOD (MOD AUTOSELL)"
 $autoSellConfig = Join-Path $ConfigDir "autosell.json"
 $autoSellId = "1sYzi_pcc9KtqWWekSb4sWjuU6xnsvnB_"
 if ((Test-Path $autoSellConfig) -and ((Get-Item $autoSellConfig).Length -gt 100)) {
-Write-Success "Config autosell.json da ton tai, bo qua tai xuong tu Drive!"
+Write-Success "Config autosell.json already exists, skipping download!"
 } else {
-Write-Step "7/10" "Dang tai config autosell.json moi tu Google Drive..."
+Write-Step "7/11" "Downloading autosell.json config from Google Drive..."
 $dlOk = Download-DriveFile -FileId $autoSellId -OutFile $autoSellConfig -Desc "autosell.json"
 if (-not $dlOk) {
 $localAutoSell = Join-Path $ScriptDir "data\autosell.json"
 if (Test-Path $localAutoSell) {
 Copy-Item -Path $localAutoSell -Destination $autoSellConfig -Force
-Write-Success "Da copy config autosell.json tu ban sao luu data/"
+Write-Success "Restored autosell.json config from local backup data/"
 }
 } else {
-Write-Success "Config AutoSell da duoc cai dat tai: $autoSellConfig"
+Write-Success "AutoSell config installed at: $autoSellConfig"
 }
 }
 if (Test-Path $autoSellConfig) {
@@ -663,23 +664,23 @@ $jsonObj = $jsonText | ConvertFrom-Json
 $jsonObj.discordWebhookUrl = $DiscordWebhook
 $updatedJson = $jsonObj | ConvertTo-Json -Depth 10
 [System.IO.File]::WriteAllText($autoSellConfig, $updatedJson, [System.Text.Encoding]::UTF8)
-Write-Success "Da tu dong cap nhat Discord Webhook vao: $autoSellConfig"
+Write-Success "Updated Discord Webhook URL in: $autoSellConfig"
 } catch {
-Write-Warn "Khong the ghi Webhook vao autosell.json: $_"
+Write-Warn "Failed to write Webhook to autosell.json: $_"
 }
 } else {
-Write-Host "  (Khong thay doi Discord Webhook cho AutoSell)" -ForegroundColor DarkGray
+Write-Host "  (Discord Webhook unchanged for AutoSell)" -ForegroundColor DarkGray
 }
 }
-Write-Title "BUOC 8: CAI DAT CONFIG NO RENDER & AUTO PAY CHO METEOR CLIENT"
+Write-Title "STEP 8: CONFIGURE NO-RENDER & AUTO PAY (METEOR CLIENT)"
 $cfgNoRenderPath = Join-Path $MeteorDir "config no render.txt"
 $rawNoRenderTxt = Join-Path $TempDir "raw_no_render.txt"
 if (-not (Test-Path $cfgNoRenderPath)) {
 $noRenderId = "1uKBRRd9WHBoCTiLFcjW1imWfseCR5MhA"
-Write-Step "8/10" "Dang tai du lieu config no-render cua Meteor Client..."
+Write-Step "8/11" "Downloading Meteor Client No-Render config data..."
 Download-DriveFile -FileId $noRenderId -OutFile $rawNoRenderTxt -Desc "config no render (raw)" | Out-Null
 } else {
-Write-Success "Config No-Render da ton tai, bo qua tai xuong tu Drive!"
+Write-Success "No-Render configuration already exists, skipping download!"
 }
 function Build-SpamNbtBytes([string]$PayCommand, [int]$Delay = 400) {
 $ms = New-Object System.IO.MemoryStream
@@ -853,25 +854,25 @@ updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 }
 $payJson = $payCfgObj | ConvertTo-Json -Compress
 [System.IO.File]::WriteAllText((Join-Path $MeteorDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
-Write-Success "Config No-Render da duoc cai dat & TU DONG BAT SAN tren Meteor Client!"
+Write-Success "No-Render configuration installed & AUTO-ENABLED on Meteor Client!"
 if ($EnableAutoPay) {
-Write-Success "Config Auto Pay ($AutoPayCmd | Delay: 400 | Tat Disable On Leave & Disconnect) da duoc TU DONG BAT SAN!"
+Write-Success "Auto Pay config ($AutoPayCmd | Delay: 400 | Disable On Leave/Disconnect OFF) AUTO-ENABLED!"
 }
 } catch {
-Write-Warn "Khong the khoi tao modules.nbt tu dong: $_"
+Write-Warn "Failed to initialize modules.nbt automatically: $_"
 }
-Write-Title "BUOC 9: CAI DAT RESOURCE PACK (BEATRIX SHOP)"
+Write-Title "STEP 9: INSTALL RESOURCE PACK (BEATRIX SHOP)"
 $packId = "1sJoybUBUmIM0Kcsus9AXYZ8_c6JBAJ1M"
 $packName = "beatrix_shop 1.9v1.zip"
 $targetPack = Join-Path $ResourcePacksDir $packName
 $packReady = $false
 if ((Test-Path $targetPack) -and ((Get-Item $targetPack).Length -gt 10000000)) {
 $packReady = $true
-Write-Success "Resource Pack $packName da ton tai ($([math]::Round((Get-Item $targetPack).Length/1MB, 1)) MB), bo qua tai xuong!"
+Write-Success "Resource Pack $packName already exists ($([math]::Round((Get-Item $targetPack).Length/1MB, 1)) MB), skipping download!"
 } else {
-Write-Step "9/10" "Dang tai Resource Pack beatrix_shop (30MB) tu Google Drive..."
+Write-Step "9/11" "Downloading Beatrix Shop Resource Pack (30MB) from Google Drive..."
 $dlPack = Download-DriveFile -FileId $packId -OutFile $targetPack -Desc $packName
-if ($dlPack) { $packReady = $true; Write-Success "Resource Pack da duoc cai dat tai: $targetPack" }
+if ($dlPack) { $packReady = $true; Write-Success "Resource Pack installed successfully at: $targetPack" }
 }
 if ($packReady) {
 for ($idx = 2; $idx -le $InstanceCount; $idx++) {
@@ -883,7 +884,7 @@ Copy-Item -Path $targetPack -Destination $otherPackFile -Force
 }
 }
 }
-Write-Title "BUOC 10: TAO CAU HINH OPTIONS.TXT & SODIUM SIEU NHE (TOI UU CHO VPS YEU)"
+Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED FOR WEAK VPS)"
 $optionsFile = Join-Path $MinecraftDir "options.txt"
 $optionsLines = @(
 "version:3955",
@@ -935,13 +936,13 @@ $sodiumOptJson = @'
 }
 '@
 [System.IO.File]::WriteAllText($sodiumOptFile, $sodiumOptJson, [System.Text.Encoding]::UTF8)
-Write-Success "Da toi uu options.txt & Sodium: Render 2 Chunks, 20 FPS, 1 Chunk Thread, 0% Audio CPU!"
+Write-Success "Optimized options.txt & Sodium: 2 Chunks, 20 Max FPS, 1 Chunk Thread, 0% Audio CPU!"
 if ($InstanceCount -gt 1) {
-Write-Title "KHOI TAO THEM INSTANCE CHO VPS 8-8 (TOI DA $InstanceCount INSTANCE)"
+Write-Title "INITIALIZING ADDITIONAL INSTANCES FOR VPS 8-8 (MAX $InstanceCount INSTANCES)"
 for ($i = 2; $i -le $InstanceCount; $i++) {
 $nextName = "VPS-AFK-$i"
 $nextDir = Join-Path $PrismDir "instances\$nextName"
-Write-Step "$i/$InstanceCount" "Dang khoi tao $nextName tu instance goc (sao chep mods, configs, options)..."
+Write-Step "$i/$InstanceCount" "Cloning $nextName from base instance (copying mods, configs, options)..."
 if (-not (Test-Path $nextDir)) { New-Item -ItemType Directory -Path $nextDir -Force | Out-Null }
 Copy-Item -Path (Join-Path $InstanceDir "mmc-pack.json") -Destination (Join-Path $nextDir "mmc-pack.json") -Force
 Copy-Item -Path (Join-Path $InstanceDir "patches") -Destination (Join-Path $nextDir "patches") -Recurse -Force
@@ -967,7 +968,7 @@ $nextMinecraftDir = Join-Path $nextDir ".minecraft"
 if (Test-Path $nextMinecraftDir) { Remove-Item -Path $nextMinecraftDir -Recurse -Force -ErrorAction SilentlyContinue }
 Copy-Item -Path $MinecraftDir -Destination $nextMinecraftDir -Recurse -Force
 Remove-Item (Join-Path $nextMinecraftDir "mods\iris-fabric*") -Force -ErrorAction SilentlyContinue
-Write-Success "Instance $nextName da duoc tao thanh cong (Gioi han: 2GB RAM & 2 CPU Cores)!"
+Write-Success "Instance $nextName created successfully (Limited: 2GB RAM & 2 CPU Cores)!"
 }
 }
 $allInstNames = @()
@@ -980,15 +981,15 @@ updated = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 }
 $instCfgJson = $instCfgObj | ConvertTo-Json -Compress
 [System.IO.File]::WriteAllText((Join-Path $BaseDir "instance_config.json"), $instCfgJson, [System.Text.Encoding]::UTF8)
-Write-Title "BUOC 11: CAI DAT VA CAU HINH MEM REDUCT (GIAI PHONG RAM TU DONG CHO VPS)"
+Write-Title "STEP 11: CONFIGURE MEM REDUCT (AUTOMATIC BACKGROUND RAM CLEANER)"
 $memReductDir = Join-Path $BaseDir "MemReduct"
 $memReductExe = Join-Path $memReductDir "memreduct.exe"
 if (Test-Path $memReductExe) {
-Write-Success "Mem Reduct da ton tai tai: $memReductExe, bo qua tai xuong!"
+Write-Success "Mem Reduct already exists at: $memReductExe, skipping download!"
 } else {
 $memReduct7z = Join-Path $TempDir "memreduct.7z"
 $memReductUrl = "https://github.com/henrypp/memreduct/releases/download/v.3.5.2/memreduct-3.5.2-bin.7z"
-Write-Step "11/11" "Dang tai Mem Reduct Portable tu GitHub..."
+Write-Step "11/11" "Downloading Mem Reduct Portable from GitHub..."
 $dlMr = Download-FileWithCurl -Url $memReductUrl -OutFile $memReduct7z -Desc "Mem Reduct 3.5.2 Portable"
 if ($dlMr) {
 New-Item -ItemType Directory -Path $memReductDir -Force | Out-Null
@@ -1023,23 +1024,23 @@ try {
 $runKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 Set-ItemProperty -Path $runKey -Name "MemReduct" -Value "`"$memReductExe`" -minimized" -Force
 try { & schtasks.exe /Create /TN "memreductTask" /TR "`"$memReductExe`" -minimized" /SC ONLOGON /RL HIGHEST /F 2>$null | Out-Null } catch {}
-Write-Success "Da them Mem Reduct vao Windows Startup & Skip UAC (Tu khoi dong ngam cung VPS)!"
+Write-Success "Added Mem Reduct to Windows Startup & Task Scheduler (Auto-starts on boot)!"
 } catch {
-Write-Warn "Khong the them vao Registry Startup: $_"
+Write-Warn "Failed to add Mem Reduct to Registry Startup: $_"
 }
 Stop-Process -Name "memreduct" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 300
 try {
 Start-Process -FilePath $memReductExe -ArgumentList "-minimized"
-Write-Success "Mem Reduct da duoc khoi chay ngam duoi khay he thong!"
+Write-Success "Mem Reduct launched silently in system tray!"
 } catch {
-Write-Warn "Khong the khoi chay Mem Reduct: $_"
+Write-Warn "Failed to start Mem Reduct: $_"
 }
-Write-Success "Mem Reduct da duoc cau hinh chuan: Don RAM moi 30 phut & khi > 85%, bao ve RAM Java (bo Working Set), tat thong bao!"
+Write-Success "Mem Reduct configured: Cleans RAM every 30m & when >85%, protects Java RAM (excludes Working Set), silent mode!"
 } else {
-Write-Warn "Khong the cai dat Mem Reduct tu dong."
+Write-Warn "Failed to configure Mem Reduct automatically."
 }
-Write-Title "CAI DAT VA TAO PHIM TAT 1-CLICK TREN DESKTOP (ZERO-TERMINAL)"
+Write-Title "STEP 12: INSTALL ZERO-TERMINAL DESKTOP SHORTCUTS"
 
 $binDir = Join-Path $BaseDir "bin"
 if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
@@ -1086,10 +1087,10 @@ foreach ($app in $apps) {
     # Neu van chua co exe hoac bi loi, tai file ma nguon va tu bien dich bang csc.exe
     if (-not (Test-Path $targetExe) -or ((Get-Item $targetExe).Length -lt 1000)) {
         if (-not (Test-Path $targetSrc)) {
-            Download-FileWithCurl "$repoRaw/src/$($app.Src)" $targetSrc "Ma nguon $($app.Src)"
+            Download-FileWithCurl "$repoRaw/src/$($app.Src)" $targetSrc "$($app.Src) source code"
         }
         if ((Test-Path $targetSrc) -and (Test-Path $csc)) {
-            Write-Host "  -> Dang bien dich $($app.Name) tu ma nguon C#..." -ForegroundColor Cyan
+            Write-Host "  -> Compiling $($app.Name) from C# source..." -ForegroundColor Cyan
             $argsList = @("/target:winexe", "/nologo", "/optimize+")
             if ($app.Main) { $argsList += "/main:$($app.Main)" }
             if ($app.Ref) { $argsList += "/reference:$($app.Ref)" }
@@ -1123,7 +1124,7 @@ if ($Desktop -and (Test-Path $Desktop)) {
             Copy-Item -Path $sourceExe -Destination (Join-Path $Desktop $app.Desktop) -Force
         }
     }
-    Write-Success "Da don sach Desktop va cap nhat 5 ung dung GUI (.exe) khong mo Terminal!"
+    Write-Success "Cleaned Desktop and deployed 5 standalone GUI (.exe) tools with zero terminal popups!"
 }
 
 # Xoa thu muc tam
@@ -1132,7 +1133,7 @@ Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Title "SETUP COMPLETED 100%! MINECRAFT VPS IS READY"
 Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Software Rendering) : READY" -ForegroundColor Green
 Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)            : INITIALIZED" -ForegroundColor Green
-Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
+Write-Host " [OK] 17 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
 Write-Host " [OK] Mem Reduct: Auto Memory Cleaning (> 85% & every 30m)           : RUNNING" -ForegroundColor Green
 Write-Host " [OK] 5 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
 Write-Host ""
