@@ -1,0 +1,6 @@
+# Temporary & Scratch
+scratch/
+*.tmp
+* (1).*
+test_args.ps1
+scratch_watchdog_ui.ps1
