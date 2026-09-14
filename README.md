@@ -19,12 +19,12 @@
 Nếu bạn vừa thuê một VPS mới tinh (hoàn toàn trống), chỉ cần mở **PowerShell** (Run as Administrator) trên VPS, dán đúng **1 dòng lệnh sau rồi bấm Enter**:
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol=3072; irm https://paste.rs/sXPH4 | iex
+[Net.ServicePointManager]::SecurityProtocol=3072; irm https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/setup-vps.ps1 | iex
 ```
 
 *Hoặc nếu mạng VPS của bạn bị lỗi TLS/EOF với `irm`, dùng lệnh `curl` có sẵn trên Windows:*
 ```powershell
-curl.exe -sL https://paste.rs/sXPH4 | iex
+curl.exe -sL https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/setup-vps.ps1 | iex
 ```
 
 *(Hoặc nếu đang có sẵn thư mục tool, bạn có thể chạy `setup.bat` hoặc gõ `.\setup-vps.ps1`)*
