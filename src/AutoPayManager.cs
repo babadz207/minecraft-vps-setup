@@ -174,29 +174,36 @@ public class AutoPayManagerForm : Form {
     }
 
     private void LoadCurrentConfig() {
-        string cfgFile = Path.Combine(instancesDir, @"VPS-AFK-1\.minecraft\meteor-client\pay_config.json");
-        if (File.Exists(cfgFile)) {
-            try {
-                string json = File.ReadAllText(cfgFile);
-                string user = ExtractJsonVal(json, "user");
-                string amt = ExtractJsonVal(json, "amount");
-                bool enabled = json.Contains("\"enabled\":true") || json.Contains("\"enabled\": true");
+        string[] candidates = new string[] {
+            Path.Combine(instancesDir, @"VPS-AFK-1\.minecraft\meteor-client\pay_config.json"),
+            Path.Combine(instancesDir, @"VPS-AFK-1\meteor-client\pay_config.json"),
+            Path.Combine(baseDir, "pay_config.json"),
+            Path.Combine(baseDir, @"data\pay_config.json")
+        };
+        foreach (string cfgFile in candidates) {
+            if (File.Exists(cfgFile)) {
+                try {
+                    string json = File.ReadAllText(cfgFile);
+                    string user = ExtractJsonVal(json, "user");
+                    string amt = ExtractJsonVal(json, "amount");
+                    bool enabled = json.Contains("\"enabled\":true") || json.Contains("\"enabled\": true");
 
-                txtUser.Text = user;
-                txtAmount.Text = amt;
-                chkEnable.Checked = enabled;
+                    txtUser.Text = user;
+                    txtAmount.Text = amt;
+                    chkEnable.Checked = enabled;
 
-                if (enabled && !string.IsNullOrEmpty(user)) {
-                    lblCurrentStatus.Text = "Status: ● ACTIVE";
-                    lblCurrentStatus.ForeColor = Color.FromArgb(74, 222, 128);
-                    lblCommandPreview.Text = "Command: /pay " + user + " " + amt + " (Delay: 400 ticks)";
-                } else {
-                    lblCurrentStatus.Text = "Status: ○ DISABLED";
-                    lblCurrentStatus.ForeColor = Color.FromArgb(148, 163, 184);
-                    lblCommandPreview.Text = "Auto Pay is currently disabled";
-                }
-                return;
-            } catch {}
+                    if (enabled && !string.IsNullOrEmpty(user)) {
+                        lblCurrentStatus.Text = "Status: ● ACTIVE";
+                        lblCurrentStatus.ForeColor = Color.FromArgb(74, 222, 128);
+                        lblCommandPreview.Text = "Command: /pay " + user + " " + amt + " (Delay: 400 ticks)";
+                    } else {
+                        lblCurrentStatus.Text = "Status: ○ DISABLED";
+                        lblCurrentStatus.ForeColor = Color.FromArgb(148, 163, 184);
+                        lblCommandPreview.Text = "Auto Pay is currently disabled";
+                    }
+                    return;
+                } catch {}
+            }
         }
         lblCurrentStatus.Text = "Status: ○ NOT CONFIGURED";
         lblCurrentStatus.ForeColor = Color.FromArgb(148, 163, 184);
@@ -389,6 +396,25 @@ public class AutoPayManagerForm : Form {
                 } catch {}
             }
         }
+
+        // Central pay_config.json & sync invocation
+        try {
+            string centralJson = string.Format("{{\"user\":\"{0}\",\"amount\":\"{1}\",\"enabled\":{2},\"updated\":\"{3}\"}}",
+                user, amt, enable ? "true" : "false", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            File.WriteAllText(Path.Combine(baseDir, "pay_config.json"), centralJson, Encoding.UTF8);
+            string dDir = Path.Combine(baseDir, "data");
+            if (!Directory.Exists(dDir)) Directory.CreateDirectory(dDir);
+            File.WriteAllText(Path.Combine(dDir, "pay_config.json"), centralJson, Encoding.UTF8);
+
+            string syncScript = Path.Combine(baseDir, @"bin\sync-configs.ps1");
+            if (File.Exists(syncScript)) {
+                ProcessStartInfo psi = new ProcessStartInfo("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -File \"" + syncScript + "\" -BaseDir \"" + baseDir + "\"");
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+                Process p = Process.Start(psi);
+                if (p != null) p.WaitForExit(3000);
+            }
+        } catch {}
     }
 
     private static byte[] BuildSpamNbtBytes(string payCommand, int delay) {
@@ -419,13 +445,8 @@ public class AutoPayManagerForm : Form {
             ms.WriteByte(10); // TAG_Compound
             WriteI32(ms, 1);
 
-            ms.WriteByte(8); // TAG_String "name"
-            WriteU16(ms, 4);
-            byte[] nb = Encoding.UTF8.GetBytes("name");
-            ms.Write(nb, 0, 4);
-            WriteU16(ms, 7);
-            byte[] vb = Encoding.UTF8.GetBytes("default");
-            ms.Write(vb, 0, 7);
+            WriteTagString(ms, "name", "General");
+            WriteTagByte(ms, "sectionExpanded", 1);
 
             ms.WriteByte(9); // TAG_List "settings"
             WriteU16(ms, 8);
@@ -433,9 +454,17 @@ public class AutoPayManagerForm : Form {
             ms.WriteByte(10); // TAG_Compound
             WriteI32(ms, 7);
 
-            // setting 1: bypass
-            WriteTagString(ms, "name", "bypass");
-            WriteTagByte(ms, "value", 0);
+            // setting 1: messages
+            WriteTagString(ms, "name", "messages");
+            ms.WriteByte(9); // TAG_List "value"
+            WriteU16(ms, 5);
+            byte[] valB = Encoding.UTF8.GetBytes("value");
+            ms.Write(valB, 0, 5);
+            ms.WriteByte(8); // TAG_String
+            WriteI32(ms, 1);
+            byte[] cmdBytes = Encoding.UTF8.GetBytes(payCommand);
+            WriteU16(ms, cmdBytes.Length);
+            ms.Write(cmdBytes, 0, cmdBytes.Length);
             ms.WriteByte(0);
 
             // setting 2: delay
@@ -453,27 +482,19 @@ public class AutoPayManagerForm : Form {
             WriteTagByte(ms, "value", 0);
             ms.WriteByte(0);
 
-            // setting 5: messages
-            WriteTagString(ms, "name", "messages");
-            ms.WriteByte(9); // TAG_List "value"
-            WriteU16(ms, 5);
-            byte[] valB = Encoding.UTF8.GetBytes("value");
-            ms.Write(valB, 0, 5);
-            ms.WriteByte(8); // TAG_String
-            WriteI32(ms, 1);
-            byte[] cmdBytes = Encoding.UTF8.GetBytes(payCommand);
-            WriteU16(ms, cmdBytes.Length);
-            ms.Write(cmdBytes, 0, cmdBytes.Length);
-            ms.WriteByte(0);
-
-            // setting 6: random
-            WriteTagString(ms, "name", "random");
+            // setting 5: randomise
+            WriteTagString(ms, "name", "randomise");
             WriteTagByte(ms, "value", 0);
             ms.WriteByte(0);
 
-            // setting 7: tick-delay
-            WriteTagString(ms, "name", "tick-delay");
-            WriteTagByte(ms, "value", 1);
+            // setting 6: auto-split-messages
+            WriteTagString(ms, "name", "auto-split-messages");
+            WriteTagByte(ms, "value", 0);
+            ms.WriteByte(0);
+
+            // setting 7: bypass
+            WriteTagString(ms, "name", "bypass");
+            WriteTagByte(ms, "value", 0);
             ms.WriteByte(0);
 
             ms.WriteByte(0); // end of group
