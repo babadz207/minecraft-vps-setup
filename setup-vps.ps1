@@ -993,17 +993,15 @@ Copy-Item -Path "$extractedDir\*" -Destination $memReductDir -Recurse -Force
 }
 }
 if (Test-Path $memReductExe) {
+Stop-Process -Name "memreduct" -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
 [System.IO.File]::WriteAllBytes((Join-Path $memReductDir "portable.dat"), [System.Text.Encoding]::ASCII.GetBytes("#PORTABLE#"))
 $mrIniLines = @("[memreduct]","AlwaysOnTop=0","AutoreductEnable=1","AutoreductValue=85","AutoreductIntervalEnable=1","AutoreductIntervalValue=30","ReductMask2=26","IsAllowStandbyListCleanup=1","BalloonCleanResults=0","IsNotificationsSound=0","IsShowWarningConfirmation=0","IsShowReductConfirmation=0","IsStartMinimized=1","IsCloseToTray=1","IsMinimizeToTray=1","CheckUpdatesPeriod=0","CheckUpdates=0")
-[System.IO.File]::WriteAllLines((Join-Path $memReductDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllLines((Join-Path $memReductDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::Unicode)
 $appDataMrDir = Join-Path $env:APPDATA "Henry++\Mem Reduct"
 if (-not (Test-Path $appDataMrDir)) { New-Item -ItemType Directory -Path $appDataMrDir -Force | Out-Null }
-[System.IO.File]::WriteAllLines((Join-Path $appDataMrDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::UTF8)
-try {
-$mrRegKey = "HKCU:\Software\Henry++\Mem Reduct"
-if (-not (Test-Path $mrRegKey)) { New-Item -Path $mrRegKey -Force | Out-Null }
-@{ AutoreductEnable=1; AutoreductValue=85; AutoreductIntervalEnable=1; AutoreductIntervalValue=30; ReductMask2=26; IsAllowStandbyListCleanup=1; BalloonCleanResults=0; IsNotificationsSound=0; IsShowWarningConfirmation=0; IsShowReductConfirmation=0; IsStartMinimized=1; IsCloseToTray=1; IsMinimizeToTray=1; CheckUpdates=0 }.GetEnumerator() | ForEach-Object { Set-ItemProperty -Path $mrRegKey -Name $_.Key -Value $_.Value -Type DWord -Force }
-} catch {}
+[System.IO.File]::WriteAllLines((Join-Path $appDataMrDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::Unicode)
+
 try {
 $runKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 Set-ItemProperty -Path $runKey -Name "MemReduct" -Value "`"$memReductExe`" -minimized" -Force
@@ -1012,16 +1010,13 @@ Write-Success "Da them Mem Reduct vao Windows Startup & Skip UAC (Tu khoi dong n
 } catch {
 Write-Warn "Khong the them vao Registry Startup: $_"
 }
-$mrProc = Get-Process -Name "memreduct" -ErrorAction SilentlyContinue
-if (-not $mrProc) {
+Stop-Process -Name "memreduct" -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 300
 try {
 Start-Process -FilePath $memReductExe -ArgumentList "-minimized"
 Write-Success "Mem Reduct da duoc khoi chay ngam duoi khay he thong!"
 } catch {
 Write-Warn "Khong the khoi chay Mem Reduct: $_"
-}
-} else {
-Write-Success "Mem Reduct da dang chay san ngam duoi Taskbar!"
 }
 Write-Success "Mem Reduct da duoc cau hinh chuan: Don RAM moi 30 phut & khi > 85%, bao ve RAM Java (bo Working Set), tat thong bao!"
 } else {
