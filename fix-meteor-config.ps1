@@ -316,6 +316,20 @@ foreach ($inst in $targetInstances) {
                     Write-Host "  -> [OK] Iris Shader companion mod restored (flickering fixed)!" -ForegroundColor Green
                 }
             }
+            $autoSellFile = Join-Path $md "autosell.jar"
+            if (-not (Test-Path $autoSellFile) -or ((Get-Item $autoSellFile).Length -ne 48776)) {
+                Write-Host "  -> Updating to latest autosell.jar..." -ForegroundColor Yellow
+                $asUrl = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/bin/autosell.jar"
+                try {
+                    & curl.exe -k -L --connect-timeout 10 -o $autoSellFile $asUrl
+                } catch {}
+                if (-not (Test-Path $autoSellFile) -or ((Get-Item $autoSellFile).Length -lt 40000)) {
+                    & curl.exe -k -L --connect-timeout 10 -o $autoSellFile "https://drive.usercontent.google.com/download?id=1MdbtjTgnxfy81LnO9LkcszCjt8f05z4u&export=download&confirm=t"
+                }
+                if (Test-Path $autoSellFile) {
+                    Write-Host "  -> [OK] Latest autosell.jar updated successfully!" -ForegroundColor Green
+                }
+            }
         }
     }
 

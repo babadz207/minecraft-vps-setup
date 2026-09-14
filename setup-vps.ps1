@@ -626,7 +626,7 @@ return ($c -gt 0)
 Write-Title "STEP 6: DOWNLOAD OPTIMIZED MODS (18 MODS)" 
 $modsList = @(
 @{ Id = "1P89LBaIvgWtNFi3YiTEu3WYmnosKhhd5"; Name = "AutoRotate-1.1-R2-nohwid.jar" },
-@{ Id = "1ncv-dODi1VEmxqbnVwdQsnybdomoGSiL"; Name = "autosell.jar" },
+@{ Id = "1MdbtjTgnxfy81LnO9LkcszCjt8f05z4u"; Name = "autosell.jar" },
 @{ Id = "1t3TRks59ULGezskip_lyLyWJzybYur2F"; Name = "cloth-config-21.11.153-fabric.jar" },
 @{ Id = "1lefcwA0Rhi0gDXiV8rLiRc7UYcvJrMKe"; Name = "CRACKEDBYGOOBER_marlowwwclient-v4.jar.disabled" },
 @{ Id = "1YvKY75db5erEs3qJoNcnCskVFkmDGfh8"; Name = "entityculling-fabric-1.10.5-mc1.21.11.jar" },
