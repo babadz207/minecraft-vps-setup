@@ -1,11 +1,12 @@
-# ==============================================================================
+﻿# ==============================================================================
 # FIX-METEOR-CONFIG.PS1 - FIX NO RENDER, AUTO PAY SPAM & CHUNK DISTANCE
 # Repository: https://github.com/babadz207/minecraft-vps-setup
 # ==============================================================================
 param(
     [string]$PayUser = "",
     [string]$PayAmount = "",
-    [int]$ChunkDistance = 2
+    [int]$RenderDistance = 32,
+    [int]$SimulationDistance = 32
 )
 
 Set-ExecutionPolicy Bypass -Scope Process -Force -ErrorAction SilentlyContinue
@@ -82,8 +83,8 @@ if ($enablePay) {
 } else {
     Write-Host "  - Auto Pay (Spam) : DISABLED" -ForegroundColor DarkGray
 }
-Write-Host "  - Render Distance : 2 Chunks (Ultra-low CPU)" -ForegroundColor White
-Write-Host "  - Simulation Dist : $ChunkDistance Chunks (Optimized RAM)" -ForegroundColor White
+Write-Host "  - Render Distance : $RenderDistance Chunks (Farm machines loaded)" -ForegroundColor White
+Write-Host "  - Simulation Dist : $SimulationDistance Chunks (Farm ticking enabled)" -ForegroundColor White
 Write-Host ""
 
 # 2. Stop running Minecraft instances to prevent RAM overwrite on exit
@@ -333,8 +334,8 @@ foreach ($inst in $targetInstances) {
                 }
             }
         }
-        $optMap["renderDistance"] = "2"
-        $optMap["simulationDistance"] = "$ChunkDistance"
+        $optMap["renderDistance"] = "$RenderDistance"
+        $optMap["simulationDistance"] = "$SimulationDistance"
         $optMap["maxFps"] = "20"
         $optMap["enableVsync"] = "false"
         $optMap["entityDistanceScaling"] = "0.5"
@@ -376,6 +377,6 @@ Write-Host "   ALL SETTINGS SUCCESSFULLY APPLIED & PERSISTED!       " -Foregroun
 Write-Host "========================================================" -ForegroundColor Green
 Write-Host " - No Render       : [ON] (Items, blocks, mobs hidden)" -ForegroundColor White
 Write-Host " - Spam (Auto Pay) : [$(if ($enablePay){'ON'}else{'OFF'})] $($payCmd)" -ForegroundColor White
-Write-Host " - Render Distance : 2 Chunks" -ForegroundColor White
-Write-Host " - Simulation Dist : $ChunkDistance Chunks" -ForegroundColor White
+Write-Host " - Render Distance : $RenderDistance Chunks (Farm loaded)" -ForegroundColor White
+Write-Host " - Simulation Dist : $SimulationDistance Chunks (Farm ticking)" -ForegroundColor White
 Write-Host ""

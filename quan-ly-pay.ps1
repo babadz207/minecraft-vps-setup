@@ -299,8 +299,8 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
                     }
                 }
             }
-            $optMap["renderDistance"] = "2"
-            $optMap["simulationDistance"] = "2"
+            $optMap["renderDistance"] = "32"
+            $optMap["simulationDistance"] = "32"
             $optMap["maxFps"] = "20"
             $lines = @()
             foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }

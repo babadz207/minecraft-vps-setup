@@ -929,8 +929,8 @@ $optionsFile = Join-Path $MinecraftDir "options.txt"
 $optionsLines = @(
 "version:3955",
 "graphicsMode:0",
-"renderDistance:2",
-"simulationDistance:2",
+"renderDistance:32",
+"simulationDistance:32",
 "maxFps:20",
 "enableVsync:false",
 "guiScale:0",
@@ -1009,7 +1009,6 @@ $nextCfgLines = @(
 $nextMinecraftDir = Join-Path $nextDir ".minecraft"
 if (Test-Path $nextMinecraftDir) { Remove-Item -Path $nextMinecraftDir -Recurse -Force -ErrorAction SilentlyContinue }
 Copy-Item -Path $MinecraftDir -Destination $nextMinecraftDir -Recurse -Force
-Remove-Item (Join-Path $nextMinecraftDir "mods\iris-fabric*") -Force -ErrorAction SilentlyContinue
 $nextNatDir = Join-Path $nextDir "natives"
 New-Item -ItemType Directory -Path $nextNatDir -Force | Out-Null
 if ($activeMesaDll) {
