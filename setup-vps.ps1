@@ -1,4 +1,4 @@
-﻿param(
+param(
 [string]$InstanceName = "VPS-AFK-1",
 [string]$DiscordWebhook = "",
 [string]$PayUser = "",
