@@ -50,6 +50,7 @@ $ModsDir = Join-Path $MinecraftDir "mods"
 $ConfigDir = Join-Path $MinecraftDir "config"
 $ResourcePacksDir = Join-Path $MinecraftDir "resourcepacks"
 $MeteorDir = Join-Path $MinecraftDir "meteor-client"
+$repoRaw = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main"
 function Write-Title {
 param([string]$Text)
 Write-Host ""
@@ -93,7 +94,7 @@ if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Forc
 $dlOk = $false
 if (Get-Command "curl.exe" -ErrorAction SilentlyContinue) {
 try {
-& curl.exe -k -L --ssl-no-revoke --http1.1 --connect-timeout 15 --max-time 300 -# -A "Mozilla/5.0" "$Url" -o "$OutFile"
+& curl.exe -k -L --ssl-no-revoke --connect-timeout 10 --speed-limit 51200 --speed-time 15 --max-time 180 -# -A "Mozilla/5.0" "$Url" -o "$OutFile"
 if ($LASTEXITCODE -eq 0 -and (Test-Path $OutFile) -and ((Get-Item $OutFile).Length -gt 100)) {
 $dlOk = $true
 } else {
@@ -104,17 +105,21 @@ Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
 }
 }
 if (-not $dlOk -and ($Url -match "github\.com") -and (Get-Command "curl.exe" -ErrorAction SilentlyContinue)) {
+$mirrors = @("https://ghfast.top/", "https://ghproxy.net/")
+foreach ($m in $mirrors) {
 try {
-$mirrorUrl = "https://ghproxy.net/" + $Url
-Write-Host "     Retrying via high-speed mirror: $mirrorUrl..." -ForegroundColor DarkYellow
-& curl.exe -k -L --ssl-no-revoke --http1.1 --connect-timeout 15 --max-time 300 -# -A "Mozilla/5.0" "$mirrorUrl" -o "$OutFile"
+$mirrorUrl = $m + $Url
+Write-Host "     Retrying via fast mirror: $m..." -ForegroundColor DarkYellow
+& curl.exe -k -L --ssl-no-revoke --connect-timeout 10 --speed-limit 51200 --speed-time 15 --max-time 180 -# -A "Mozilla/5.0" "$mirrorUrl" -o "$OutFile"
 if ($LASTEXITCODE -eq 0 -and (Test-Path $OutFile) -and ((Get-Item $OutFile).Length -gt 100)) {
 $dlOk = $true
+break
 } else {
 Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
 }
 } catch {
 Remove-Item $OutFile -Force -ErrorAction SilentlyContinue
+}
 }
 }
 if (-not $dlOk) {
@@ -372,16 +377,14 @@ Start-Process -FilePath $localPrism.FullName -ArgumentList "/S /D=$PrismDir" -Wa
 Expand-Archive -Path $localPrism.FullName -DestinationPath $PrismDir -Force
 }
 } else {
-Write-Step "2/11" "Downloading Prism Launcher Installer from prismlauncher.org..."
+Write-Step "2/11" "Downloading Prism Launcher Installer (High-Speed CDN)..."
 $prismSetupExe = Join-Path $TempDir "PrismLauncher-Setup.exe"
-$prismDlUrl = "https://github.com/PrismLauncher/PrismLauncher/releases/download/11.1.0/PrismLauncher-Windows-MSVC-Setup-11.1.0.exe"
-try {
-$headers = @{'User-Agent'='Mozilla/5.0'}
-$rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/PrismLauncher/PrismLauncher/releases/latest' -Headers $headers
-$asset = $rel.assets | Where-Object { $_.name -like '*Windows-MSVC-Setup*.exe' } | Select-Object -First 1
-if ($asset) { $prismDlUrl = $asset.browser_download_url }
-} catch {}
-$dlSuccess = Download-FileWithCurl -Url $prismDlUrl -OutFile $prismSetupExe -Desc "Prism Launcher Installer"
+$prismDlUrl = "$repoRaw/bin/PrismSetup.exe"
+$dlSuccess = Download-FileWithCurl -Url $prismDlUrl -OutFile $prismSetupExe -Desc "Prism Launcher Installer (Fast Direct)"
+if (-not $dlSuccess) {
+    $prismDlUrl = "https://github.com/PrismLauncher/PrismLauncher/releases/download/11.1.0/PrismLauncher-Windows-MSVC-Setup-11.1.0.exe"
+    $dlSuccess = Download-FileWithCurl -Url $prismDlUrl -OutFile $prismSetupExe -Desc "Prism Launcher Installer (GitHub Fallback)"
+}
 if ($dlSuccess -and (Test-Path $prismSetupExe)) {
 Write-Step "2/11" "Installing Prism Launcher (Silent Mode)..."
 Start-Process -FilePath $prismSetupExe -ArgumentList "/S /D=$PrismDir" -Wait
@@ -418,10 +421,14 @@ if ($foundJavaw) {
 $javawExe = $foundJavaw.FullName
 Write-Success "Java 21 already exists at: $javawExe"
 } else {
-Write-Step "3/11" "Downloading Java 21 JRE Portable from Adoptium Temurin..."
+Write-Step "3/11" "Downloading Java 21 Runtime (Akamai CDN)..."
 $javaZip = Join-Path $TempDir "OpenJDK21-JRE.zip"
-$javaUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse?project=jdk"
-Download-FileWithCurl -Url $javaUrl -OutFile $javaZip -Desc "Java 21 OpenJDK JRE x64"
+$javaUrl = "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip"
+$dlJava = Download-FileWithCurl -Url $javaUrl -OutFile $javaZip -Desc "Java 21 Runtime (Oracle Akamai CDN)"
+if (-not $dlJava) {
+    $javaUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse?project=jdk"
+    $dlJava = Download-FileWithCurl -Url $javaUrl -OutFile $javaZip -Desc "Java 21 JRE (Adoptium Fallback)"
+}
 Write-Step "3/11" "Extracting Java 21 runtime..."
 New-Item -ItemType Directory -Path $javaDir -Force | Out-Null
 Expand-Archive -Path $javaZip -DestinationPath $javaDir -Force
@@ -458,10 +465,16 @@ $mesa7z = Join-Path $TempDir "mesa-llvmpipe-clean.7z"
 $zrExe = Join-Path $TempDir "7zr.exe"
 $openglDll = $null
 if (-not (Test-Path $zrExe)) {
-Download-FileWithCurl -Url "https://www.7-zip.org/a/7zr.exe" -OutFile $zrExe -Desc "7-Zip Extractor (7zr)" | Out-Null
+    $dlZr = Download-FileWithCurl -Url "$repoRaw/bin/7zr.exe" -OutFile $zrExe -Desc "7-Zip Extractor (Fast CDN)"
+    if (-not $dlZr) {
+        Download-FileWithCurl -Url "https://www.7-zip.org/a/7zr.exe" -OutFile $zrExe -Desc "7-Zip Extractor (7zr Fallback)" | Out-Null
+    }
 }
-$mmozeikoUrl = "https://github.com/mmozeiko/build-mesa/releases/download/26.2.2/mesa-llvmpipe-x64-26.2.2.7z"
-Download-FileWithCurl -Url $mmozeikoUrl -OutFile $mesa7z -Desc "Mesa3D LLVMpipe x64 Standalone" | Out-Null
+$dlMesa = Download-FileWithCurl -Url "$repoRaw/bin/mesa.7z" -OutFile $mesa7z -Desc "Mesa3D Software OpenGL (Fast Direct CDN)"
+if (-not $dlMesa) {
+    $mmozeikoUrl = "https://github.com/mmozeiko/build-mesa/releases/download/26.2.2/mesa-llvmpipe-x64-26.2.2.7z"
+    Download-FileWithCurl -Url $mmozeikoUrl -OutFile $mesa7z -Desc "Mesa3D LLVMpipe x64 Standalone (GitHub Fallback)" | Out-Null
+}
 if (Test-Path $zrExe) {
 Write-Step "4/11" "Extracting opengl32.dll using 7zr..."
 & $zrExe e "$mesa7z" "-o$TempDir" "opengl32.dll" -r -y | Out-Null

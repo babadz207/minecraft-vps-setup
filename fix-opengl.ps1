@@ -41,8 +41,13 @@ if (-not $mesaDll) {
     if (-not (Test-Path $zrExe)) {
         & curl.exe -k -L -A "Mozilla/5.0" "https://www.7-zip.org/a/7zr.exe" -o "$zrExe"
     }
-    $mmozeikoUrl = "https://github.com/mmozeiko/build-mesa/releases/download/26.2.2/mesa-llvmpipe-x64-26.2.2.7z"
-    & curl.exe -k -L -A "Mozilla/5.0" "$mmozeikoUrl" -o "$mesa7z"
+    $repoRaw = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main"
+    $mesaUrl = "$repoRaw/bin/mesa.7z"
+    & curl.exe -k -L --connect-timeout 10 --speed-limit 51200 --speed-time 15 --max-time 180 -# -A "Mozilla/5.0" "$mesaUrl" -o "$mesa7z"
+    if (-not (Test-Path $mesa7z) -or ((Get-Item $mesa7z).Length -lt 10000000)) {
+        $mmozeikoUrl = "https://github.com/mmozeiko/build-mesa/releases/download/26.2.2/mesa-llvmpipe-x64-26.2.2.7z"
+        & curl.exe -k -L --connect-timeout 10 --speed-limit 51200 --speed-time 15 --max-time 180 -# -A "Mozilla/5.0" "$mmozeikoUrl" -o "$mesa7z"
+    }
     if (Test-Path $zrExe) {
         & $zrExe e "$mesa7z" "-o$TempDir" "opengl32.dll" -r -y | Out-Null
     }
