@@ -1022,113 +1022,104 @@ Write-Success "Mem Reduct da duoc cau hinh chuan: Don RAM moi 30 phut & khi > 85
 } else {
 Write-Warn "Khong the cai dat Mem Reduct tu dong."
 }
-Write-Title "TAO SCRIPT HO TRO VA PHIM TAT 1-CLICK TREN DESKTOP"
-Remove-Item (Join-Path $BaseDir "run-afk.bat") -Force -ErrorAction SilentlyContinue
-$openPrismBat = Join-Path $BaseDir "open-prism.bat"
-$openPrismBatLines = @(
-"@echo off",
-"title Prism Launcher",
-'set "APP_DIR=C:\MinecraftVPS\PrismLauncher"',
-'if not exist "%APP_DIR%" set "APP_DIR=%~dp0\PrismLauncher"',
-'cd /d "%APP_DIR%"',
-'start "" prismlauncher.exe',
-"exit"
+Write-Title "CAI DAT VA TAO PHIM TAT 1-CLICK TREN DESKTOP (ZERO-TERMINAL)"
+
+$binDir = Join-Path $BaseDir "bin"
+if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
+$srcDir = Join-Path $BaseDir "src"
+if (-not (Test-Path $srcDir)) { New-Item -ItemType Directory -Path $srcDir -Force | Out-Null }
+
+$repoRaw = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main"
+
+# 1. Tai hoac copy cac file thuc thi .exe (va ma nguon .cs du phong)
+$apps = @(
+    @{ Name = "DangNhapMicrosoft.exe"; Src = "DangNhapMicrosoft.cs"; Desktop = "1. Dang Nhap Microsoft.exe"; Desc = "App Huong Dan Dang Nhap Microsoft"; Main = $null; Ref = $null },
+    @{ Name = "WatchdogUI.exe"; Src = "WatchdogUI.cs"; Desktop = "2. Auto Restart 24-7 (Watchdog).exe"; Desc = "App Auto Restart 24/7 (Watchdog UI)"; Main = $null; Ref = "System.Management.dll" },
+    @{ Name = "AutoPayManager.exe"; Src = "AutoPayManager.cs"; Desktop = "3. Quan Ly Auto Pay.exe"; Desc = "App Quan Ly Auto Pay"; Main = $null; Ref = $null },
+    @{ Name = "DonRAM.exe"; Src = "Launchers.cs"; Desktop = "4. Don RAM (Mem Reduct).exe"; Desc = "Launcher Don RAM"; Main = "DonRAMLauncher"; Ref = $null },
+    @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Mo Prism Launcher.exe"; Desc = "Launcher Mo Prism Launcher"; Main = "MoPrismLauncher"; Ref = $null }
 )
-[System.IO.File]::WriteAllLines($openPrismBat, $openPrismBatLines, [System.Text.Encoding]::ASCII)
-$loginMsBat = Join-Path $BaseDir "login-microsoft.bat"
-$loginMsBatLines = @(
-"@echo off",
-"chcp 65001 >nul",
-"title Dang Nhap Tai Khoan Microsoft - Prism Launcher",
-'set "APP_DIR=C:\MinecraftVPS\PrismLauncher"',
-'if not exist "%APP_DIR%" set "APP_DIR=%~dp0\PrismLauncher"',
-'cd /d "%APP_DIR%"',
-"echo   HUONG DAN DANG NHAP MICROSOFT (CHI LAM 1 LAN DAU)",
-"echo 1. Tren Prism Launcher: Bam goc tren phai [Accounts] -^> [Manage Accounts].",
-"echo 2. Bam [Add Microsoft] o cot ben phai.",
-"echo 3. Bam [Open Page and Copy Code] -^> Trinh duyet mo trang microsoft.com/link.",
-"echo 4. Nhan Ctrl+V dan ma Code -^> Dang nhap tai khoan Microsoft cua ban.",
-"echo 5. Nick Minecraft se tu xuat hien tren Prism Launcher! Terminal se tu dong!",
-'start "" prismlauncher.exe',
-'echo Dang cho dang nhap Microsoft... (Tu dong dong terminal khi xong)',
-'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& { $f = ''accounts.json''; while ($true) { Start-Sleep -Seconds 2; if (Test-Path $f) { try { $j = Get-Content $f -Raw | ConvertFrom-Json; if ($j.accounts -and $j.accounts.Count -gt 0) { exit } } catch {} } } }"',
-'exit'
-)
-[System.IO.File]::WriteAllLines($loginMsBat, $loginMsBatLines, [System.Text.Encoding]::UTF8)
-$watchdogUiPs1 = Join-Path $BaseDir "watchdog-ui.ps1"
-$watchdogUiGzB64 = "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"
-$watchdogUiBytes = Decompress-GZipBytes -Data ([Convert]::FromBase64String($watchdogUiGzB64))
-if ($watchdogUiBytes.Length -gt 3 -and ($watchdogUiBytes[0] -ne 0xEF -or $watchdogUiBytes[1] -ne 0xBB -or $watchdogUiBytes[2] -ne 0xBF)) {
-$watchdogUiBytes = [byte[]]@(0xEF, 0xBB, 0xBF) + $watchdogUiBytes
+
+# Tim csc.exe bien dich C# san co tren Windows
+$csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+if (-not (Test-Path $csc)) {
+    $csc = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
 }
-[System.IO.File]::WriteAllBytes($watchdogUiPs1, $watchdogUiBytes)
-$watchdogBat = Join-Path $BaseDir "run-watchdog.bat"
-$watchdogBatLines = @(
-"@echo off",
-"chcp 65001 >nul",
-"title Auto Check Connect 24-7 - donutsmp.net",
-'cd /d "%~dp0"',
-'set "SCRIPT=C:\MinecraftVPS\watchdog-ui.ps1"',
-'if not exist "%SCRIPT%" set "SCRIPT=%~dp0watchdog-ui.ps1"',
-'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%SCRIPT%"',
-"exit"
-)
-[System.IO.File]::WriteAllLines($watchdogBat, $watchdogBatLines, [System.Text.Encoding]::UTF8)
-$runMrBat = Join-Path $BaseDir "run-memreduct.bat"
-$runMrBatLines = @(
-"@echo off",
-"title Mem Reduct",
-'set "APP_DIR=C:\MinecraftVPS\MemReduct"',
-'if not exist "%APP_DIR%" set "APP_DIR=%~dp0\MemReduct"',
-'cd /d "%APP_DIR%"',
-'start "" memreduct.exe -minimized',
-"exit"
-)
-[System.IO.File]::WriteAllLines($runMrBat, $runMrBatLines, [System.Text.Encoding]::ASCII)
-$payPs1 = Join-Path $BaseDir "quan-ly-pay.ps1"
-$payBat = Join-Path $BaseDir "quan-ly-pay.bat"
-$payAppGzB64 = "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"
-$payAppBytes = Decompress-GZipBytes -Data ([Convert]::FromBase64String($payAppGzB64))
-if ($payAppBytes.Length -gt 3 -and ($payAppBytes[0] -ne 0xEF -or $payAppBytes[1] -ne 0xBB -or $payAppBytes[2] -ne 0xBF)) {
-$payAppBytes = [byte[]]@(0xEF, 0xBB, 0xBF) + $payAppBytes
+
+foreach ($app in $apps) {
+    $targetExe = Join-Path $binDir $app.Name
+    $targetSrc = Join-Path $srcDir $app.Src
+
+    # Kiem tra neu chay offline hoac co file local
+    $localBin = Join-Path $ScriptDir ("bin\" + $app.Name)
+    $localSrc = Join-Path $ScriptDir ("src\" + $app.Src)
+
+    if (Test-Path $localBin) {
+        Copy-Item -Path $localBin -Destination $targetExe -Force
+    }
+    if (Test-Path $localSrc) {
+        Copy-Item -Path $localSrc -Destination $targetSrc -Force
+    }
+
+    # Neu chua co exe, thu tai tu GitHub raw
+    if (-not (Test-Path $targetExe)) {
+        Download-FileWithCurl "$repoRaw/bin/$($app.Name)" $targetExe $app.Desc
+    }
+
+    # Neu van chua co exe hoac bi loi, tai file ma nguon va tu bien dich bang csc.exe
+    if (-not (Test-Path $targetExe) -or ((Get-Item $targetExe).Length -lt 1000)) {
+        if (-not (Test-Path $targetSrc)) {
+            Download-FileWithCurl "$repoRaw/src/$($app.Src)" $targetSrc "Ma nguon $($app.Src)"
+        }
+        if ((Test-Path $targetSrc) -and (Test-Path $csc)) {
+            Write-Host "  -> Dang bien dich $($app.Name) tu ma nguon C#..." -ForegroundColor Cyan
+            $argsList = @("/target:winexe", "/nologo", "/optimize+")
+            if ($app.Main) { $argsList += "/main:$($app.Main)" }
+            if ($app.Ref) { $argsList += "/reference:$($app.Ref)" }
+            $argsList += "/out:`"$targetExe`""
+            $argsList += "`"$targetSrc`""
+            & $csc $argsList | Out-Null
+        }
+    }
 }
-[System.IO.File]::WriteAllBytes($payPs1, $payAppBytes)
-$payBatLines = @(
-"@echo off",
-"title Quan Ly Auto Pay (DonutSMP)",
-'set "SCRIPT=C:\MinecraftVPS\quan-ly-pay.ps1"',
-'if not exist "%SCRIPT%" set "SCRIPT=%~dp0quan-ly-pay.ps1"',
-'powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "%SCRIPT%"',
-"exit"
-)
-[System.IO.File]::WriteAllLines($payBat, $payBatLines, [System.Text.Encoding]::ASCII)
+
+# 2. Don dep Desktop sach se va copy 5 file exe ra Desktop
 $Desktop = [Environment]::GetFolderPath('Desktop')
 if ($Desktop -and (Test-Path $Desktop)) {
-Remove-Item (Join-Path $Desktop "*Chay Minecraft AFK*") -Force -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $Desktop "2. Auto Restart*") -Force -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $Desktop "3. Quan Ly Auto Pay*") -Force -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $Desktop "4. Don RAM*") -Force -ErrorAction SilentlyContinue
-Remove-Item (Join-Path $Desktop "5. Mo Prism Launcher*") -Force -ErrorAction SilentlyContinue
-Copy-Item -Path $loginMsBat -Destination (Join-Path $Desktop "1. Dang Nhap Microsoft.bat") -Force
-Copy-Item -Path $watchdogBat -Destination (Join-Path $Desktop "3. Auto Restart 24-7 (Watchdog).bat") -Force
-Copy-Item -Path $payBat -Destination (Join-Path $Desktop "4. Quan Ly Auto Pay.bat") -Force
-Copy-Item -Path $runMrBat -Destination (Join-Path $Desktop "5. Don RAM (Mem Reduct).bat") -Force
-Copy-Item -Path $openPrismBat -Destination (Join-Path $Desktop "6. Mo Prism Launcher.bat") -Force
-Write-Success "Da don sach file cu thua va cap nhat 5 phim tat tren Desktop VPS!"
+    # Xoa triet de moi file bat cu va shortcut cu
+    Remove-Item (Join-Path $Desktop "*.bat") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Chay Minecraft AFK*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Dang Nhap Microsoft*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Auto Restart*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Quan Ly Auto Pay*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Don RAM*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Mo Prism Launcher*") -Force -ErrorAction SilentlyContinue
+
+    foreach ($app in $apps) {
+        $sourceExe = Join-Path $binDir $app.Name
+        if (Test-Path $sourceExe) {
+            Copy-Item -Path $sourceExe -Destination (Join-Path $Desktop $app.Desktop) -Force
+        }
+    }
+    Write-Success "Da don sach Desktop va cap nhat 5 ung dung GUI (.exe) khong mo Terminal!"
 }
+
+# Xoa thu muc tam
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+
 Write-Title "HOAN TAT CAI DAT 100%! MINECRAFT VPS DA SAN SANG"
 Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Fix GLFW 65542) : SAN SANG" -ForegroundColor Green
 Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)        : DA KHOI TAO" -ForegroundColor Green
 Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Beatrix Shop Pack   : DA CAI DAT" -ForegroundColor Green
-Write-Host " [OK] Mem Reduct: Chay ngam tu dong giai phong RAM moi 30 phut      : DANG CHAY" -ForegroundColor Green
-Write-Host " [OK] Da tao 5 phim tat 1-click truc tiep ngoai Desktop!" -ForegroundColor Green
+Write-Host " [OK] Mem Reduct: Tu dong don RAM dinh ky 30p & khi RAM > 85%      : DANG CHAY" -ForegroundColor Green
+Write-Host " [OK] 5 Ung Dung WinGUI (.exe) da tao ngoai Desktop (Zero Terminal) : SAN SANG" -ForegroundColor Green
 Write-Host ""
-Write-Host "QUY TRINH BAT DAU AFK TREN DONUTSMP.NET:" -ForegroundColor Yellow
-Write-Host "  1. [1. Dang Nhap Microsoft.bat]          -> Login nick (chi lam 1 lan dau)" -ForegroundColor Cyan
-Write-Host "  2. [3. Auto Restart 24-7 (Watchdog).bat] -> Vao game & auto reconnect 24/7!" -ForegroundColor Green
-Write-Host "  3. [4. Quan Ly Auto Pay.bat]             -> Doi nick nhan tien / so tien" -ForegroundColor Cyan
-Write-Host "  4. [5. Don RAM (Mem Reduct).bat]         -> Giai phong RAM (chay ngam)" -ForegroundColor Cyan
-Write-Host "  5. [6. Mo Prism Launcher.bat]            -> Mo Prism Launcher" -ForegroundColor Cyan
+Write-Host "QUY TRINH AFK TREN DONUTSMP.NET (KHONG CON TERMINAL DEN):" -ForegroundColor Yellow
+Write-Host "  1. [1. Dang Nhap Microsoft.exe]          -> Huong dan & dang nhap nick (chi 1 lan dau)" -ForegroundColor Cyan
+Write-Host "  2. [2. Auto Restart 24-7 (Watchdog).exe] -> Giao dien Dashboard 24/7, auto reconnect!" -ForegroundColor Green
+Write-Host "  3. [3. Quan Ly Auto Pay.exe]             -> Giao dien doi tien & nick nhan /pay" -ForegroundColor Cyan
+Write-Host "  4. [4. Don RAM (Mem Reduct).exe]         -> Don RAM ngay lap tuc (chay ngam)" -ForegroundColor Cyan
+Write-Host "  5. [5. Mo Prism Launcher.exe]            -> Mo Prism Launcher truc tiep" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "Chuc ban treo bot AFK thanh cong!" -ForegroundColor Magenta
+Write-Host "Chuc ban treo bot AFK thanh cong va an toan 24/7!" -ForegroundColor Magenta
+

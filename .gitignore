@@ -2,5 +2,6 @@
 scratch/
 *.tmp
 * (1).*
+*.jar
 test_args.ps1
 scratch_watchdog_ui.ps1

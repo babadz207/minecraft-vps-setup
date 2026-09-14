@@ -1,0 +1,162 @@
+[
+  {
+    "id": [
+      null,
+      "1VwKvgbJNU0eJI6IAa9Y0qb7RdxO99_e5"
+    ],
+    "name": "resource and config",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1P89LBaIvgWtNFi3YiTEu3WYmnosKhhd5"
+    ],
+    "name": "AutoRotate-1.1-R2-nohwid (1).jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1ncv-dODi1VEmxqbnVwdQsnybdomoGSiL"
+    ],
+    "name": "autosell.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1t3TRks59ULGezskip_lyLyWJzybYur2F"
+    ],
+    "name": "cloth-config-21.11.153-fabric.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1lefcwA0Rhi0gDXiV8rLiRc7UYcvJrMKe"
+    ],
+    "name": "CRACKEDBYGOOBER_marlowwwclient-v4.jar.disabled",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1YvKY75db5erEs3qJoNcnCskVFkmDGfh8"
+    ],
+    "name": "entityculling-fabric-1.10.5-mc1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1OZWQP3Tby89Of8brBVv3L5F9spsdGrq2"
+    ],
+    "name": "fabric-api-0.141.4+1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1kLLmW-acedBiOeqRDzNZMi_itXTdu54K"
+    ],
+    "name": "ferritecore-8.2.0-fabric.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1eAStuadWw6IcL7MmHGMvpumps-7GZlGp"
+    ],
+    "name": "ImmediatelyFast-Fabric-1.14.3+1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1F31AM0IZbbw5bnVz4T7MrYvItrM2HLd0"
+    ],
+    "name": "iris-fabric-1.10.7+mc1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1zEUWKqSQBltb83YWRddB1C_2iris3XNf"
+    ],
+    "name": "litematica-fabric-1.21.11-0.26.12.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1bIKtPL5KLycmMetFJmDZiaQ8OfWMmScw"
+    ],
+    "name": "lithium-fabric-0.21.4+mc1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1eUby03S4Qv7iOf4ghgRk10oS-zA9YeA4"
+    ],
+    "name": "malilib-fabric-1.21.11-0.27.16.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1tfO0LvqD_AEvpZp3KGfEPRo_AtiRzqRV"
+    ],
+    "name": "meteor-client-1.21.11-82 (1).jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1dDYtI2wLbR6YmJpvRANYg6NW5Ti6zvau"
+    ],
+    "name": "modmenu-17.0.1-beta.1.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1LOZEYDeYU4XIJ0z7yN9uOgX7y4ciH_oA"
+    ],
+    "name": "opsec-1.21.11+v1.1.7.1.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1KCgU8KJAQ7KoQYG-Q_1dQP4H4qDzc3Bq"
+    ],
+    "name": "placeholder-api-2.8.2+1.21.10.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1GU1zQZ4XzTTSlP34NoHWCbvompxrylvH"
+    ],
+    "name": "sodium-fabric-0.8.7+mc1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1XKSpFU4Qf94NNtu-lZTr0WstRsnMt7FV"
+    ],
+    "name": "sodium-fabric-0.8.13+mc1.21.11.jar",
+    "type": null
+  },
+  {
+    "id": [
+      null,
+      "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"
+    ],
+    "name": "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar",
+    "type": null
+  }
+]
