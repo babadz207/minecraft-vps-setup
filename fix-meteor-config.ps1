@@ -369,8 +369,8 @@ foreach ($inst in $targetInstances) {
         }
         $optMap["renderDistance"] = "$RenderDistance"
         $optMap["simulationDistance"] = "$SimulationDistance"
-        $optMap["maxFps"] = "260"
-        $optMap["enableVsync"] = "false"
+        $optMap["maxFps"] = "120"
+        $optMap["enableVsync"] = "true"
         $optMap["entityDistanceScaling"] = "0.5"
         $optMap["pauseOnLostFocus"] = "false"
         $optMap["clouds"] = "0"

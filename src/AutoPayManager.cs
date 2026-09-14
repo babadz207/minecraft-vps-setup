@@ -374,7 +374,9 @@ public class AutoPayManagerForm : Form {
                             } else if (lines[i].StartsWith("renderDistance:")) {
                                 lines[i] = "renderDistance:32";
                             } else if (lines[i].StartsWith("maxFps:")) {
-                                lines[i] = "maxFps:260";
+                                lines[i] = "maxFps:120";
+                            } else if (lines[i].StartsWith("enableVsync:")) {
+                                lines[i] = "enableVsync:true";
                             }
                         }
                         if (!hasSim) {
