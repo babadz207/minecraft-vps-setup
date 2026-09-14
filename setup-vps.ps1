@@ -568,11 +568,22 @@ Write-Success "Configured servers.dat (DonutSMP - donutsmp.net)"
 } else {
 Write-Success "servers.dat already exists, keeping existing server list!"
 }
+$activeMesaDll = if (Test-Path $prismOpengl) { $prismOpengl } elseif (Test-Path $javaOpengl) { $javaOpengl } else { $null }
+if ($activeMesaDll) {
+    $natDir = Join-Path $InstanceDir "natives"
+    $mcBin = Join-Path $MinecraftDir "bin"
+    New-Item -ItemType Directory -Path $natDir, $mcBin -Force | Out-Null
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $InstanceDir "opengl32.dll") -Force
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $MinecraftDir "opengl32.dll") -Force
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $natDir "opengl32.dll") -Force
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $mcBin "opengl32.dll") -Force
+    Write-Success "Injected Mesa3D opengl32.dll into instance $InstanceName (natives, .minecraft, bin)"
+}
 $prismCfgFile = Join-Path $PrismDir "prismlauncher.cfg"
 $currentHost = [System.Net.Dns]::GetHostName()
-$prismCfgLines = @("[General]","ConfigVersion=1.2","Language=en_US","ApplicationTheme=system","IconTheme=pe_colored","LastHostname=$currentHost","JavaPath=$javaPathEscaped","MinMemAlloc=512","MaxMemAlloc=1536","AutomaticJavaDownload=true","AutomaticJavaSwitch=true","UserAskedAboutAutomaticJavaDownload=true","Analytics=false","CheckForUpdates=false")
+$prismCfgLines = @("[General]","ConfigVersion=1.2","Language=en_US","ApplicationTheme=system","IconTheme=pe_colored","LastHostname=$currentHost","JavaPath=$javaPathEscaped","MinMemAlloc=512","MaxMemAlloc=1536","AutomaticJavaDownload=false","AutomaticJavaSwitch=false","UserAskedAboutAutomaticJavaDownload=true","Analytics=false","CheckForUpdates=false")
 [System.IO.File]::WriteAllLines($prismCfgFile, $prismCfgLines, [System.Text.Encoding]::UTF8)
-Write-Success "Configured prismlauncher.cfg (Bypassed Quick Setup Wizard)"
+Write-Success "Configured prismlauncher.cfg (Bypassed Quick Setup Wizard & Locked Java)"
 $accountsFile = Join-Path $PrismDir "accounts.json"
 if (-not (Test-Path $accountsFile)) {
 $accountsData = @{
@@ -955,10 +966,10 @@ $nextCfgLines = @(
 "OverrideJava=true",
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
-"MinMemAlloc=512",
-"MaxMemAlloc=2048",
+"MinMemAlloc=384",
+"MaxMemAlloc=1536",
 "JavaPath=$javaPathEscaped",
-"JvmArgs=-XX:+UseG1GC -XX:ActiveProcessorCount=2 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1 -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -Dsun.java2d.opengl=false",
+"JvmArgs=-XX:+UseG1GC -XX:ActiveProcessorCount=2 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1 -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false",
 "JoinServerOnLaunch=true",
 "JoinServerOnLaunchAddress=donutsmp.net",
 "LogPrePostOutput=true"
@@ -968,6 +979,12 @@ $nextMinecraftDir = Join-Path $nextDir ".minecraft"
 if (Test-Path $nextMinecraftDir) { Remove-Item -Path $nextMinecraftDir -Recurse -Force -ErrorAction SilentlyContinue }
 Copy-Item -Path $MinecraftDir -Destination $nextMinecraftDir -Recurse -Force
 Remove-Item (Join-Path $nextMinecraftDir "mods\iris-fabric*") -Force -ErrorAction SilentlyContinue
+$nextNatDir = Join-Path $nextDir "natives"
+New-Item -ItemType Directory -Path $nextNatDir -Force | Out-Null
+if ($activeMesaDll) {
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $nextDir "opengl32.dll") -Force
+    Copy-Item -Path $activeMesaDll -Destination (Join-Path $nextNatDir "opengl32.dll") -Force
+}
 Write-Success "Instance $nextName created successfully (Limited: 2GB RAM & 2 CPU Cores)!"
 }
 }
