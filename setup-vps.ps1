@@ -996,7 +996,7 @@ if (Test-Path $memReductExe) {
 Stop-Process -Name "memreduct" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 [System.IO.File]::WriteAllBytes((Join-Path $memReductDir "portable.dat"), [System.Text.Encoding]::ASCII.GetBytes("#PORTABLE#"))
-$mrIniLines = @("[memreduct]","AlwaysOnTop=0","AutoreductEnable=1","AutoreductValue=85","AutoreductIntervalEnable=1","AutoreductIntervalValue=30","ReductMask2=26","IsAllowStandbyListCleanup=1","BalloonCleanResults=0","IsNotificationsSound=0","IsShowWarningConfirmation=0","IsShowReductConfirmation=0","IsStartMinimized=1","IsCloseToTray=1","IsMinimizeToTray=1","CheckUpdatesPeriod=0","CheckUpdates=0")
+$mrIniLines = @("[memreduct]","AlwaysOnTop=0","AutoreductEnable=1","AutoreductValue=85","AutoreductIntervalEnable=1","AutoreductIntervalValue=30","ReductMask2=254","IsAllowStandbyListCleanup=1","BalloonCleanResults=0","IsNotificationsSound=0","IsShowWarningConfirmation=0","IsShowReductConfirmation=0","IsStartMinimized=1","IsCloseToTray=1","IsMinimizeToTray=1","CheckUpdatesPeriod=0","CheckUpdates=0")
 [System.IO.File]::WriteAllLines((Join-Path $memReductDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::Unicode)
 $appDataMrDir = Join-Path $env:APPDATA "Henry++\Mem Reduct"
 if (-not (Test-Path $appDataMrDir)) { New-Item -ItemType Directory -Path $appDataMrDir -Force | Out-Null }
