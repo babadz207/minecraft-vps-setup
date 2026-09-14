@@ -569,7 +569,8 @@ public class WatchdogForm : Form {
             psi.FileName = prismExe;
             psi.Arguments = "--launch \"" + instName + "\" --server " + serverAddress + accArg;
             psi.WorkingDirectory = prismDir;
-            psi.UseShellExecute = true;
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
 
             // Adaptive Mesa3D thread tuning for weak VPS
             int cpuCores = Environment.ProcessorCount;

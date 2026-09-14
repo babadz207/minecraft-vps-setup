@@ -518,7 +518,8 @@ public class AutoPayManagerForm : Form {
                         FileName = prismExe,
                         Arguments = args,
                         WorkingDirectory = prismDir,
-                        UseShellExecute = true
+                        UseShellExecute = false,
+                        CreateNoWindow = true
                     };
                     psi.EnvironmentVariables["LP_NUM_THREADS"] = (Environment.ProcessorCount <= 4) ? "1" : "2";
                     psi.EnvironmentVariables["MESA_GL_VERSION_OVERRIDE"] = "3.3";
