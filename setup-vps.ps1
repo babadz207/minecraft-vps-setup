@@ -623,8 +623,7 @@ $z.Dispose()
 return ($c -gt 0)
 } catch { return $false }
 }
-Write-Title "STEP 6: DOWNLOAD OPTIMIZED MODS (17 MODS)"
-Write-Host "  Note: Iris Shader (18th mod) is intentionally excluded to prevent crashes on Non-GPU VPS (Mesa3D Software OpenGL)." -ForegroundColor DarkCyan
+Write-Title "STEP 6: DOWNLOAD OPTIMIZED MODS (18 MODS)" 
 $modsList = @(
 @{ Id = "1P89LBaIvgWtNFi3YiTEu3WYmnosKhhd5"; Name = "AutoRotate-1.1-R2-nohwid.jar" },
 @{ Id = "1ncv-dODi1VEmxqbnVwdQsnybdomoGSiL"; Name = "autosell.jar" },
@@ -634,7 +633,7 @@ $modsList = @(
 @{ Id = "1OZWQP3Tby89Of8brBVv3L5F9spsdGrq2"; Name = "fabric-api-0.141.4+1.21.11.jar" },
 @{ Id = "1kLLmW-acedBiOeqRDzNZMi_itXTdu54K"; Name = "ferritecore-8.2.0-fabric.jar" },
 @{ Id = "1eAStuadWw6IcL7MmHGMvpumps-7GZlGp"; Name = "ImmediatelyFast-Fabric-1.14.3+1.21.11.jar" },
-
+@{ Id = "1F31AM0IZbbw5bnVz4T7MrYvItrM2HLd0"; Name = "iris-fabric-1.10.7+mc1.21.11.jar" },
 @{ Id = "1zEUWKqSQBltb83YWRddB1C_2iris3XNf"; Name = "litematica-fabric-1.21.11-0.26.12.jar" },
 @{ Id = "1bIKtPL5KLycmMetFJmDZiaQ8OfWMmScw"; Name = "lithium-fabric-0.21.4+mc1.21.11.jar" },
 @{ Id = "1eUby03S4Qv7iOf4ghgRk10oS-zA9YeA4"; Name = "malilib-fabric-1.21.11-0.27.16.jar" },
@@ -645,7 +644,6 @@ $modsList = @(
 @{ Id = "1XKSpFU4Qf94NNtu-lZTr0WstRsnMt7FV"; Name = "sodium-fabric-0.8.13+mc1.21.11.jar" },
 @{ Id = "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"; Name = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar" }
 )
-Remove-Item (Join-Path $ModsDir "iris-fabric*") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "* (1).jar") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "*.tmp") -Force -ErrorAction SilentlyContinue
 $count = 0
@@ -667,7 +665,7 @@ Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc "$($mod.Name) (
 }
 }
 }
-Write-Success "All 17 optimized mods installed successfully into: $ModsDir"
+Write-Success "All 18 optimized mods installed successfully into: $ModsDir"
 Write-Title "STEP 7: CONFIGURE AUTO SELL MOD (MOD AUTOSELL)"
 $autoSellConfig = Join-Path $ConfigDir "autosell.json"
 $autoSellId = "1sYzi_pcc9KtqWWekSb4sWjuU6xnsvnB_"
@@ -1183,7 +1181,7 @@ Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Title "SETUP COMPLETED 100%! MINECRAFT VPS IS READY"
 Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Software Rendering) : READY" -ForegroundColor Green
 Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)            : INITIALIZED" -ForegroundColor Green
-Write-Host " [OK] 17 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
+Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
 Write-Host " [OK] Mem Reduct: Auto Memory Cleaning (> 85% & every 30m)           : RUNNING" -ForegroundColor Green
 Write-Host " [OK] 5 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
 Write-Host ""

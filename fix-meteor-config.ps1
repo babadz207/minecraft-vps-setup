@@ -292,6 +292,32 @@ foreach ($inst in $targetInstances) {
         [System.IO.File]::WriteAllText((Join-Path $mDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
     }
 
+    # 5.5. Ensure iris-fabric-1.10.7+mc1.21.11.jar is present to eliminate screen flickering / nhap nhay
+    $modsDirs = @(
+        (Join-Path $inst.FullName ".minecraft\mods"),
+        (Join-Path $inst.FullName "mods")
+    )
+    foreach ($md in $modsDirs) {
+        if (Test-Path (Split-Path -Parent $md)) {
+            if (-not (Test-Path $md)) { New-Item -ItemType Directory -Path $md -Force | Out-Null }
+            $irisFile = Join-Path $md "iris-fabric-1.10.7+mc1.21.11.jar"
+            if (-not (Test-Path $irisFile) -or ((Get-Item $irisFile).Length -lt 1000000)) {
+                Write-Host "  -> Restoring missing Iris mod to eliminate screen flickering..." -ForegroundColor Yellow
+                $irisUrl = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/bin/iris-fabric-1.10.7%2Bmc1.21.11.jar"
+                try {
+                    & curl.exe -k -L --connect-timeout 10 -o $irisFile $irisUrl
+                } catch {}
+                if (-not (Test-Path $irisFile) -or ((Get-Item $irisFile).Length -lt 1000000)) {
+                    # Fallback Google Drive
+                    & curl.exe -k -L --connect-timeout 10 -o $irisFile "https://drive.usercontent.google.com/download?id=1F31AM0IZbbw5bnVz4T7MrYvItrM2HLd0&export=download&confirm=t"
+                }
+                if (Test-Path $irisFile) {
+                    Write-Host "  -> [OK] Iris Shader companion mod restored (flickering fixed)!" -ForegroundColor Green
+                }
+            }
+        }
+    }
+
     # 6. Update options.txt in BOTH .minecraft and root
     $optDirs = @(
         (Join-Path $inst.FullName ".minecraft"),
