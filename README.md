@@ -7,7 +7,7 @@
 > - Cài đặt tự động **Prism Launcher Portable**, **Java 21 Portable (Adoptium Temurin)**, và **Visual C++ Redistributable 2015-2022**.
 > - Tích hợp sẵn kết nối server bản quyền **`donutsmp.net`** (tự động đưa vào `servers.dat` và `instance.cfg`).
 > - Hỗ trợ đăng nhập tài khoản **Microsoft chính thức** tiện lợi qua mã Device Code (`microsoft.com/link`).
-> - Cài đặt toàn bộ **18 Mods**, **Config AutoSell mới nhất**, **Config No-Render (Meteor Client)**, và **Resource Pack Beatrix Shop** từ Google Drive.
+> - Cài đặt toàn bộ **17 Mods tối ưu** (tự động loại bỏ Iris Shader để tránh crash trên VPS không có GPU), **Config AutoSell mới nhất**, **Config No-Render (Meteor Client)**, và **Resource Pack Beatrix Shop** từ Google Drive.
 > - Cấu hình sẵn **Sodium**: Render Distance 32 Chunks, Simulation Distance 32 Chunks, 120 FPS, VSync ON.
 > - Cài đặt và cấu hình sẵn **Mem Reduct**: Dọn RAM tự động khi > 85% & mỗi 30 phút, bảo vệ RAM Java, tắt âm thanh và thông báo bong bóng.
 > - Tích hợp **Watchdog 24/7**: Tự động mở lại game sau 10s khi crash hoặc tự động reconnect khi bị kick/văng khỏi server DonutSMP!
