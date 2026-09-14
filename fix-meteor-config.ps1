@@ -383,7 +383,43 @@ foreach ($inst in $targetInstances) {
         [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
     }
 
-    Write-Host "  -> Updated: $($inst.Name)" -ForegroundColor Green
+    # 6.5. Update instance.cfg (allocate 2.5GB RAM & unlock all 4 CPU cores)
+    $instCfgPath = Join-Path $inst.FullName "instance.cfg"
+    if (Test-Path $instCfgPath) {
+        $cfgLines = Get-Content $instCfgPath
+        $newCfg = @()
+        foreach ($cl in $cfgLines) {
+            if ($cl -match '^MaxMemAlloc=') {
+                $newCfg += "MaxMemAlloc=2560"
+            } elseif ($cl -match '^MinMemAlloc=') {
+                $newCfg += "MinMemAlloc=512"
+            } elseif ($cl -match '^JvmArgs=') {
+                $newCfg += "JvmArgs=-XX:+UseG1GC -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
+            } else {
+                $newCfg += $cl
+            }
+        }
+        [System.IO.File]::WriteAllLines($instCfgPath, $newCfg, [System.Text.Encoding]::UTF8)
+    }
+
+    # 6.6. Update sodium-options.json (Multi-thread chunk builder & disable deferral)
+    $sOptFile = Join-Path (Join-Path $inst.FullName ".minecraft\config") "sodium-options.json"
+    $sJson = @'
+{
+  "quality": {
+    "weather_quality": "FAST",
+    "leaves_quality": "FAST"
+  },
+  "performance": {
+    "chunk_builder_threads": 0,
+    "always_defer_chunk_updates": false,
+    "animate_only_visible_textures": true
+  }
+}
+'@
+    [System.IO.File]::WriteAllText($sOptFile, $sJson, [System.Text.Encoding]::UTF8)
+
+    Write-Host "  -> Updated: $($inst.Name) (2.5GB RAM, 4 CPU Cores, Multi-thread Chunks)" -ForegroundColor Green
 }
 
 # 7. Relaunch Minecraft

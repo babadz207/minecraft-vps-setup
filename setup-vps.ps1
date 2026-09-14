@@ -551,7 +551,8 @@ $mmcPackJson = (@{ components = $packComps; formatVersion = 1 } | ConvertTo-Json
 $javaPathEscaped = if ($javawExe) { $javawExe.Replace("\", "/") } else { "javaw" }
 $memOverride = "true"
 $cpuCores = [Environment]::ProcessorCount
-$jvmArgs = if ($LimitRamCpu -or $cpuCores -le 4) {
+$maxMem = if ($cpuCores -ge 4) { 2560 } else { 1536 }
+$jvmArgs = if ($LimitRamCpu) {
 "-XX:+UseG1GC -XX:ActiveProcessorCount=2 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1 -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
 } else {
 "-XX:+UseG1GC -XX:G1ReservePercent=15 -XX:MaxGCPauseMillis=100 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -Dsun.java2d.opengl=false -Dsun.java2d.d3d=false"
@@ -565,8 +566,8 @@ $instanceCfgLines = @(
 "OverrideJava=true",
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
-"MinMemAlloc=384",
-"MaxMemAlloc=1536",
+"MinMemAlloc=512",
+"MaxMemAlloc=$maxMem",
 "JavaPath=$javaPathEscaped",
 "JvmArgs=$jvmArgs",
 "JoinServerOnLaunch=true",
@@ -974,18 +975,15 @@ $sodiumOptJson = @'
     "weather_quality": "FAST",
     "leaves_quality": "FAST"
   },
-  "advanced": {
-    "cpu_render_ahead_limit": 1
-  },
   "performance": {
-    "chunk_builder_threads": 1,
-    "always_defer_chunk_updates": true,
+    "chunk_builder_threads": 0,
+    "always_defer_chunk_updates": false,
     "animate_only_visible_textures": true
   }
 }
 '@
 [System.IO.File]::WriteAllText($sodiumOptFile, $sodiumOptJson, [System.Text.Encoding]::UTF8)
-Write-Success "Optimized options.txt & Sodium: 2 Chunks, 20 Max FPS, 1 Chunk Thread, 0% Audio CPU!"
+Write-Success "Optimized options.txt & Sodium: 32 Chunks, Max FPS, Multi-Thread Chunk Loading!"
 if ($InstanceCount -gt 1) {
 Write-Title "INITIALIZING ADDITIONAL INSTANCES FOR VPS 8-8 (MAX $InstanceCount INSTANCES)"
 for ($i = 2; $i -le $InstanceCount; $i++) {
