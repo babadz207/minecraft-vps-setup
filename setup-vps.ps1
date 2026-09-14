@@ -660,8 +660,14 @@ Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
 Write-Host "  [$count/$($modsList.Count)] " -ForegroundColor Yellow -NoNewline
 Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc $mod.Name | Out-Null
 if (-not (Test-ValidJar $targetModFile)) {
-Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
-Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc "$($mod.Name) (Retry)" | Out-Null
+    Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
+    $escapedName = [System.Uri]::EscapeDataString($mod.Name)
+    $ghUrl = "$repoRaw/bin/$escapedName"
+    Download-FileWithCurl -Url $ghUrl -OutFile $targetModFile -Desc "$($mod.Name) (GitHub CDN)" | Out-Null
+    if (-not (Test-ValidJar $targetModFile)) {
+        Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
+        Download-DriveFile -FileId $mod.Id -OutFile $targetModFile -Desc "$($mod.Name) (Retry)" | Out-Null
+    }
 }
 }
 }
