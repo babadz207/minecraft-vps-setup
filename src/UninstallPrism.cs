@@ -8,6 +8,7 @@ using System.Windows.Forms;
 public class UninstallPrismForm : Form {
     private ProgressBar progressBar;
     private Label lblStatus;
+    private CheckBox chkKeepLogin;
     private Button btnUninstallOnly;
     private Button btnUninstallAndReinstall;
     private Button btnCancel;
@@ -17,7 +18,7 @@ public class UninstallPrismForm : Form {
 
     public UninstallPrismForm() {
         this.Text = "Uninstall & Reset - Prism Launcher & Minecraft VPS";
-        this.Size = new Size(620, 520);
+        this.Size = new Size(620, 560);
         this.StartPosition = FormStartPosition.CenterScreen;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MaximizeBox = false;
@@ -44,8 +45,8 @@ public class UninstallPrismForm : Form {
 
         // Info Card
         infoPanel = new Panel();
-        infoPanel.Location = new Point(25, 78);
-        infoPanel.Size = new Size(555, 250);
+        infoPanel.Location = new Point(25, 76);
+        infoPanel.Size = new Size(555, 236);
         infoPanel.BackColor = Color.FromArgb(30, 41, 59); // Card Dark
         infoPanel.BorderStyle = BorderStyle.FixedSingle;
         this.Controls.Add(infoPanel);
@@ -54,7 +55,7 @@ public class UninstallPrismForm : Form {
         lblInfoHead.Text = "Các thành phần sẽ được gỡ bỏ và dọn dẹp sạch sẽ:";
         lblInfoHead.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
         lblInfoHead.ForeColor = Color.FromArgb(253, 224, 71); // Yellow
-        lblInfoHead.Location = new Point(16, 12);
+        lblInfoHead.Location = new Point(16, 10);
         lblInfoHead.Size = new Size(520, 24);
         infoPanel.Controls.Add(lblInfoHead);
 
@@ -67,22 +68,33 @@ public class UninstallPrismForm : Form {
             "• Đưa hệ thống VPS về trạng thái sạch 100% ban đầu để chạy lại lệnh Setup"
         };
 
-        int itemTop = 40;
+        int itemTop = 38;
         foreach (string it in items) {
             Label lblItem = new Label();
             lblItem.Text = it;
             lblItem.Font = new Font("Segoe UI", 9f);
             lblItem.ForeColor = Color.FromArgb(241, 245, 249);
             lblItem.Location = new Point(16, itemTop);
-            lblItem.Size = new Size(520, 32);
+            lblItem.Size = new Size(520, 30);
             infoPanel.Controls.Add(lblItem);
-            itemTop += 34;
+            itemTop += 32;
         }
+
+        // Checkbox Keep Login
+        chkKeepLogin = new CheckBox();
+        chkKeepLogin.Text = "✓ Giữ lại tài khoản Microsoft (Không phải đăng nhập lại sau khi reset)";
+        chkKeepLogin.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+        chkKeepLogin.ForeColor = Color.FromArgb(74, 222, 128); // Green
+        chkKeepLogin.Location = new Point(28, 322);
+        chkKeepLogin.Size = new Size(550, 26);
+        chkKeepLogin.Checked = true;
+        chkKeepLogin.Cursor = Cursors.Hand;
+        this.Controls.Add(chkKeepLogin);
 
         // Progress Bar
         progressBar = new ProgressBar();
-        progressBar.Location = new Point(25, 340);
-        progressBar.Size = new Size(555, 18);
+        progressBar.Location = new Point(25, 355);
+        progressBar.Size = new Size(555, 16);
         progressBar.Style = ProgressBarStyle.Continuous;
         progressBar.Value = 0;
         progressBar.Visible = false;
@@ -93,8 +105,8 @@ public class UninstallPrismForm : Form {
         lblStatus.Text = "Sẵn sàng thực hiện. Vui lòng chọn hành động bên dưới:";
         lblStatus.Font = new Font("Segoe UI", 9f, FontStyle.Italic);
         lblStatus.ForeColor = Color.FromArgb(148, 163, 184);
-        lblStatus.Location = new Point(25, 364);
-        lblStatus.Size = new Size(555, 24);
+        lblStatus.Location = new Point(25, 376);
+        lblStatus.Size = new Size(555, 22);
         lblStatus.TextAlign = ContentAlignment.MiddleCenter;
         this.Controls.Add(lblStatus);
 
@@ -106,7 +118,7 @@ public class UninstallPrismForm : Form {
         btnUninstallAndReinstall.ForeColor = Color.White;
         btnUninstallAndReinstall.FlatStyle = FlatStyle.Flat;
         btnUninstallAndReinstall.FlatAppearance.BorderSize = 0;
-        btnUninstallAndReinstall.Location = new Point(25, 396);
+        btnUninstallAndReinstall.Location = new Point(25, 408);
         btnUninstallAndReinstall.Size = new Size(270, 42);
         btnUninstallAndReinstall.Cursor = Cursors.Hand;
         btnUninstallAndReinstall.Click += (s, e) => StartUninstall(true);
@@ -119,7 +131,7 @@ public class UninstallPrismForm : Form {
         btnUninstallOnly.ForeColor = Color.White;
         btnUninstallOnly.FlatStyle = FlatStyle.Flat;
         btnUninstallOnly.FlatAppearance.BorderSize = 0;
-        btnUninstallOnly.Location = new Point(310, 396);
+        btnUninstallOnly.Location = new Point(310, 408);
         btnUninstallOnly.Size = new Size(270, 42);
         btnUninstallOnly.Cursor = Cursors.Hand;
         btnUninstallOnly.Click += (s, e) => StartUninstall(false);
@@ -132,21 +144,27 @@ public class UninstallPrismForm : Form {
         btnCancel.ForeColor = Color.FromArgb(203, 213, 225);
         btnCancel.FlatStyle = FlatStyle.Flat;
         btnCancel.FlatAppearance.BorderSize = 0;
-        btnCancel.Location = new Point(245, 444);
-        btnCancel.Size = new Size(130, 28);
+        btnCancel.Location = new Point(245, 460);
+        btnCancel.Size = new Size(130, 30);
         btnCancel.Cursor = Cursors.Hand;
         btnCancel.Click += (s, e) => this.Close();
         this.Controls.Add(btnCancel);
     }
 
     private void StartUninstall(bool reinstallAfter) {
+        bool keepLogin = chkKeepLogin.Checked;
         string confirmMsg = reinstallAfter 
-            ? "Bạn có chắc chắn muốn GỠ CÀI ĐẶT TOÀN BỘ Prism Launcher và CÀI ĐẶT LẠI NGAY LẬP TỨC?\n\nTất cả tiến trình game sẽ được đóng và dữ liệu cũ sẽ được xóa sạch."
-            : "Bạn có chắc chắn muốn GỠ BỎ TOÀN BỘ Prism Launcher và dọn dẹp sạch VPS?\n\nToàn bộ thư mục C:\\MinecraftVPS và các cài đặt sẽ bị xóa vĩnh viễn.";
+            ? (keepLogin 
+                ? "Bạn có chắc muốn GỠ CÀI ĐẶT và CÀI ĐẶT LẠI NGAY LẬP TỨC?\n\n• Toàn bộ file game và mod sẽ được dọn sạch.\n• TÀI KHOẢN MICROSOFT ĐƯỢC GIỮ LẠI (Không cần đăng nhập lại)."
+                : "Bạn có chắc muốn GỠ CÀI ĐẶT và CÀI ĐẶT LẠI NGAY LẬP TỨC?\n\nTất cả tiến trình và dữ liệu sẽ bị xóa sạch.")
+            : (keepLogin 
+                ? "Bạn có chắc muốn GỠ BỎ Prism Launcher và dọn dẹp sạch VPS?\n\n• Toàn bộ thư mục C:\\MinecraftVPS sẽ bị xóa.\n• TÀI KHOẢN MICROSOFT ĐƯỢC LƯU DỰ PHÒNG để lần sau cài lại tự nhận."
+                : "Bạn có chắc muốn GỠ BỎ TOÀN BỘ Prism Launcher và dọn dẹp sạch VPS?\n\nToàn bộ thư mục C:\\MinecraftVPS và các cài đặt sẽ bị xóa vĩnh viễn.");
 
         DialogResult dr = MessageBox.Show(confirmMsg, "Xác nhận gỡ cài đặt", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (dr != DialogResult.Yes) return;
 
+        chkKeepLogin.Enabled = false;
         btnUninstallAndReinstall.Enabled = false;
         btnUninstallOnly.Enabled = false;
         btnCancel.Enabled = false;
@@ -154,7 +172,7 @@ public class UninstallPrismForm : Form {
         progressBar.Value = 10;
 
         Thread workThread = new Thread(() => {
-            ExecuteCleanup(reinstallAfter);
+            ExecuteCleanup(reinstallAfter, keepLogin);
         });
         workThread.IsBackground = true;
         workThread.Start();
@@ -172,19 +190,25 @@ public class UninstallPrismForm : Form {
         }
     }
 
-    private void ExecuteCleanup(bool reinstallAfter) {
+    private void ExecuteCleanup(bool reinstallAfter, bool keepLogin) {
         try {
+            // Step 0: Backup accounts if keepLogin is enabled
+            if (keepLogin) {
+                UpdateStatus("[0/5] Đang sao lưu tài khoản Microsoft đã đăng nhập...", 15);
+                BackupAccounts();
+            }
+
             // Step 1: Kill all running processes
-            UpdateStatus("[1/5] Đang đóng các tiến trình Minecraft & công cụ đang chạy...", 20);
+            UpdateStatus("[1/5] Đang đóng các tiến trình Minecraft & công cụ đang chạy...", 25);
             KillAllRelatedProcesses();
             Thread.Sleep(800);
 
             // Step 2: Remove scheduled tasks & registry startup
-            UpdateStatus("[2/5] Đang xóa Task Scheduler & Registry tự khởi động...", 40);
+            UpdateStatus("[2/5] Đang xóa Task Scheduler & Registry tự khởi động...", 45);
             RemoveScheduledTasksAndRegistry();
 
             // Step 3: Remove C:\MinecraftVPS
-            UpdateStatus("[3/5] Đang xóa toàn bộ thư mục C:\\MinecraftVPS...", 60);
+            UpdateStatus("[3/5] Đang xóa toàn bộ thư mục C:\\MinecraftVPS...", 65);
             DeleteDirectorySafe(@"C:\MinecraftVPS");
 
             // Step 4: Clean AppData
@@ -212,12 +236,11 @@ public class UninstallPrismForm : Form {
                     }
                     Application.Exit();
                 } else {
-                    DialogResult res = MessageBox.Show(
-                        "Đã gỡ cài đặt và dọn sạch toàn bộ Prism Launcher & Minecraft VPS thành công!\n\nBạn có muốn sao chép câu lệnh Setup mới vào Clipboard để chạy sau không?",
-                        "Gỡ cài đặt thành công",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Information
-                    );
+                    string msg = keepLogin
+                        ? "Đã gỡ cài đặt và dọn sạch toàn bộ Prism Launcher thành công!\n\nTài khoản Microsoft đã được giữ lại an toàn. Khi bạn cài lại setup, hệ thống sẽ tự động nhận diện tài khoản mà không cần đăng nhập lại!\n\nBạn có muốn sao chép câu lệnh Setup vào Clipboard không?"
+                        : "Đã gỡ cài đặt và dọn sạch toàn bộ Prism Launcher & Minecraft VPS thành công!\n\nBạn có muốn sao chép câu lệnh Setup mới vào Clipboard để chạy sau không?";
+
+                    DialogResult res = MessageBox.Show(msg, "Gỡ cài đặt thành công", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                     if (res == DialogResult.Yes) {
                         try {
                             Clipboard.SetText("irm https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/setup-vps.ps1 | iex");
@@ -231,11 +254,53 @@ public class UninstallPrismForm : Form {
         } catch (Exception ex) {
             this.Invoke(new Action(() => {
                 MessageBox.Show("Lỗi trong quá trình gỡ cài đặt: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                chkKeepLogin.Enabled = true;
                 btnUninstallAndReinstall.Enabled = true;
                 btnUninstallOnly.Enabled = true;
                 btnCancel.Enabled = true;
             }));
         }
+    }
+
+    private static void BackupAccounts() {
+        try {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string tempDir = Path.GetTempPath();
+
+            string[] candidateAccounts = new string[] {
+                @"C:\MinecraftVPS\PrismLauncher\accounts.json",
+                Path.Combine(appData, @"PrismLauncher\accounts.json"),
+                @"C:\accounts_backup.json"
+            };
+
+            string validSource = null;
+            foreach (string path in candidateAccounts) {
+                if (File.Exists(path)) {
+                    try {
+                        string txt = File.ReadAllText(path);
+                        if (txt.Contains("\"profile\"") || (txt.Contains("\"accounts\"") && txt.Length > 60)) {
+                            validSource = path;
+                            break;
+                        }
+                    } catch {}
+                }
+            }
+
+            if (!string.IsNullOrEmpty(validSource)) {
+                string[] backupDestinations = new string[] {
+                    @"C:\accounts_backup.json",
+                    Path.Combine(userProfile, "accounts_backup.json"),
+                    Path.Combine(tempDir, "accounts_backup.json")
+                };
+
+                foreach (string dst in backupDestinations) {
+                    try {
+                        File.Copy(validSource, dst, true);
+                    } catch {}
+                }
+            }
+        } catch {}
     }
 
     private static void KillAllRelatedProcesses() {

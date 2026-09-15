@@ -18,6 +18,23 @@ $PrismDir = Join-Path $BaseDir "PrismLauncher"
 $InstancesDir = Join-Path $PrismDir "instances"
 if (-not (Test-Path $InstancesDir)) { exit 0 }
 
+# Ensure accounts.json is restored from backup if missing
+$prismAccFile = Join-Path $PrismDir "accounts.json"
+if (-not (Test-Path $prismAccFile) -or ((Get-Item $prismAccFile).Length -lt 60)) {
+    $bkps = @("C:\accounts_backup.json", (Join-Path $env:USERPROFILE "accounts_backup.json"), (Join-Path $env:TEMP "accounts_backup.json"))
+    foreach ($b in $bkps) {
+        if ((Test-Path $b) -and ((Get-Item $b).Length -gt 60)) {
+            try {
+                $bText = [System.IO.File]::ReadAllText($b)
+                if ($bText -match '"profile"' -or ($bText -match '"accounts"' -and $bText.Length -gt 100)) {
+                    Copy-Item -Path $b -Destination $prismAccFile -Force
+                    break
+                }
+            } catch {}
+        }
+    }
+}
+
 # 1. Read Auto Pay configuration
 $payCfgFiles = @(
     (Join-Path $BaseDir "pay_config.json"),
@@ -270,33 +287,207 @@ $payJson = $payCfgObj | ConvertTo-Json -Compress
 
 # Standardized options matching other running VPS
 $optionsLines = @(
-    "version:3955",
-    "graphicsMode:0",
+    "version:4671",
+    "ao:true",
+    "biomeBlendRadius:2",
+    "chunkSectionFadeInTime:0.75",
+    "cutoutLeaves:true",
+    "enableVsync:true",
+    "entityDistanceScaling:1.0",
+    "entityShadows:true",
+    "forceUnicodeFont:false",
+    "japaneseGlyphVariants:false",
+    "fov:0.325",
+    "fovEffectScale:1.0",
+    "darknessEffectScale:1.0",
+    "glintSpeed:0.5",
+    "glintStrength:0.75",
+    'graphicsPreset:"custom"',
+    "prioritizeChunkUpdates:1",
+    "fullscreen:false",
+    "gamma:0.5",
+    "guiScale:0",
+    "maxAnisotropyBit:1",
+    "textureFiltering:1",
+    "maxFps:120",
+    "improvedTransparency:false",
+    'inactivityFpsLimit:"afk"',
+    "mipmapLevels:4",
+    "narrator:0",
+    "particles:0",
+    "reducedDebugInfo:false",
+    'renderClouds:"true"',
+    "cloudRange:64",
     "renderDistance:32",
     "simulationDistance:32",
-    "maxFps:120",
-    "enableVsync:true",
-    "guiScale:0",
-    "fullscreen:false",
-    "entityDistanceScaling:0.5",
-    "particles:2",
-    "clouds:0",
+    "screenEffectScale:1.0",
+    'soundDevice:""',
+    "vignette:true",
+    "weatherRadius:10",
+    "autoJump:false",
+    "rotateWithMinecart:false",
+    "operatorItemsTab:false",
+    "autoSuggestions:true",
+    "chatColors:true",
+    "chatLinks:true",
+    "chatLinksPrompt:true",
+    "discrete_mouse_scroll:false",
+    "invertXMouse:false",
+    "invertYMouse:false",
+    "realmsNotifications:true",
+    "showSubtitles:false",
+    "directionalAudio:false",
+    "touchscreen:false",
+    "bobView:true",
+    "toggleCrouch:false",
+    "toggleSprint:false",
+    "toggleAttack:false",
+    "toggleUse:false",
+    "sprintWindow:7",
+    "darkMojangStudiosBackground:false",
+    "hideLightningFlashes:false",
+    "hideSplashTexts:false",
+    "mouseSensitivity:0.5",
+    "damageTiltStrength:1.0",
+    "highContrast:false",
+    "highContrastBlockOutline:false",
+    "narratorHotkey:true",
+    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip"]',
+    "incompatibleResourcePacks:[]",
+    "lastServer:",
+    "lang:en_us",
+    "chatVisibility:0",
+    "chatOpacity:1.0",
+    "chatLineSpacing:0.0",
+    "textBackgroundOpacity:0.5",
+    "backgroundForChatOnly:true",
+    "hideServerAddress:false",
+    "advancedItemTooltips:false",
+    "pauseOnLostFocus:true",
+    "overrideWidth:0",
+    "overrideHeight:0",
+    "chatHeightFocused:1.0",
+    "chatDelay:0.0",
+    "chatHeightUnfocused:0.4375",
+    "chatScale:1.0",
+    "chatWidth:1.0",
+    "notificationDisplayTime:1.0",
+    "useNativeTransport:true",
+    'mainHand:"right"',
+    "attackIndicator:1",
+    "tutorialStep:movement",
+    "mouseWheelSensitivity:1.0",
+    "rawMouseInput:true",
+    "allowCursorChanges:true",
+    "glDebugVerbosity:1",
+    "skipMultiplayerWarning:true",
+    "hideMatchedNames:true",
+    "joinedFirstServer:true",
+    "syncChunkWrites:true",
+    "showAutosaveIndicator:true",
+    "allowServerListing:true",
+    "onlyShowSecureChat:false",
+    "saveChatDrafts:false",
+    "panoramaScrollSpeed:1.0",
+    "telemetryOptInExtra:false",
+    "onboardAccessibility:false",
+    "menuBackgroundBlurriness:5",
+    "startedCleanly:true",
+    'musicToast:"never"',
+    'musicFrequency:"DEFAULT"',
+    "key_key.attack:key.mouse.left",
+    "key_key.use:key.mouse.right",
+    "key_key.forward:key.keyboard.w",
+    "key_key.left:key.keyboard.a",
+    "key_key.back:key.keyboard.s",
+    "key_key.right:key.keyboard.d",
+    "key_key.jump:key.keyboard.space",
+    "key_key.sneak:key.keyboard.left.shift",
+    "key_key.sprint:key.keyboard.left.control",
+    "key_key.drop:key.keyboard.q",
+    "key_key.inventory:key.keyboard.e",
+    "key_key.chat:key.keyboard.t",
+    "key_key.playerlist:key.keyboard.tab",
+    "key_key.pickItem:key.mouse.middle",
+    "key_key.command:key.keyboard.slash",
+    "key_key.socialInteractions:key.keyboard.p",
+    "key_key.toggleGui:key.keyboard.f1",
+    "key_key.toggleSpectatorShaderEffects:key.keyboard.f4",
+    "key_key.screenshot:key.keyboard.f2",
+    "key_key.togglePerspective:key.keyboard.f5",
+    "key_key.smoothCamera:key.keyboard.unknown",
+    "key_key.fullscreen:key.keyboard.f11",
+    "key_key.spectatorOutlines:key.keyboard.unknown",
+    "key_key.spectatorHotbar:key.mouse.middle",
+    "key_key.swapOffhand:key.keyboard.f",
+    "key_key.saveToolbarActivator:key.keyboard.c",
+    "key_key.loadToolbarActivator:key.keyboard.x",
+    "key_key.advancements:key.keyboard.l",
+    "key_key.quickActions:key.keyboard.g",
+    "key_key.debug.overlay:key.keyboard.f3",
+    "key_key.debug.modifier:key.keyboard.f3",
+    "key_key.hotbar.1:key.keyboard.1",
+    "key_key.hotbar.2:key.keyboard.2",
+    "key_key.hotbar.3:key.keyboard.3",
+    "key_key.hotbar.4:key.keyboard.4",
+    "key_key.hotbar.5:key.keyboard.5",
+    "key_key.hotbar.6:key.keyboard.6",
+    "key_key.hotbar.7:key.keyboard.7",
+    "key_key.hotbar.8:key.keyboard.8",
+    "key_key.hotbar.9:key.keyboard.9",
+    "key_key.debug.reloadChunk:key.keyboard.a",
+    "key_key.debug.showHitboxes:key.keyboard.b",
+    "key_key.debug.clearChat:key.keyboard.d",
+    "key_key.debug.crash:key.keyboard.c",
+    "key_key.debug.showChunkBorders:key.keyboard.g",
+    "key_key.debug.showAdvancedTooltips:key.keyboard.h",
+    "key_key.debug.copyRecreateCommand:key.keyboard.i",
+    "key_key.debug.spectate:key.keyboard.n",
+    "key_key.debug.switchGameMode:key.keyboard.f4",
+    "key_key.debug.debugOptions:key.keyboard.f6",
+    "key_key.debug.focusPause:key.keyboard.p",
+    "key_key.debug.dumpDynamicTextures:key.keyboard.s",
+    "key_key.debug.reloadResourcePacks:key.keyboard.t",
+    "key_key.debug.profiling:key.keyboard.l",
+    "key_key.debug.copyLocation:key.keyboard.c",
+    "key_key.debug.dumpVersion:key.keyboard.v",
+    "key_key.debug.profilingChart:key.keyboard.1",
+    "key_key.debug.fpsCharts:key.keyboard.2",
+    "key_key.debug.networkCharts:key.keyboard.3",
+    "key_key.meteor-client.open-gui:key.keyboard.right.shift",
+    "key_key.meteor-client.open-commands:key.keyboard.period",
+    "key_key.autorotate.toggle:key.keyboard.r",
+    "key_key.autorotate.open_config:key.keyboard.k",
+    "key_key.autosell.toggle:key.keyboard.left.bracket",
+    "key_key.autosell.reconnect.toggle:key.keyboard.f6",
+    "key_key.autosell.testlag:key.keyboard.f7",
+    "key_key.autosell.stats.toggle:key.keyboard.f8",
+    "key_key.autosell.itemcounter.toggle:key.keyboard.l",
+    "key_key.entityculling.toggle:key.keyboard.unknown",
+    "key_key.entityculling.toggleBoxes:key.keyboard.unknown",
+    "key_key.modmenu.open_menu:key.keyboard.unknown",
+    "key_iris.keybind.reload:key.keyboard.r",
+    "key_iris.keybind.toggleShaders:key.keyboard.k",
+    "key_iris.keybind.shaderPackSelection:key.keyboard.o",
+    "key_iris.keybind.wireframe:key.keyboard.unknown",
     "soundCategory_master:0.0",
     "soundCategory_music:0.0",
-    "soundCategory_ambient:0.0",
+    "soundCategory_record:0.0",
     "soundCategory_weather:0.0",
     "soundCategory_block:0.0",
-    "soundCategory_hostile:0.0",
-    "soundCategory_neutral:0.0",
-    "soundCategory_player:0.0",
-    "soundCategory_record:0.0",
-    "soundCategory_voice:0.0",
-    "pauseOnLostFocus:false",
-    "fov:30.0",
-    "gamma:1.0",
-    "renderClouds:false",
-    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1.zip"]',
-    'incompatibleResourcePacks:[]'
+    "soundCategory_hostile:1.0",
+    "soundCategory_neutral:1.0",
+    "soundCategory_player:1.0",
+    "soundCategory_ambient:1.0",
+    "soundCategory_voice:1.0",
+    "soundCategory_ui:1.0",
+    "modelPart_cape:true",
+    "modelPart_jacket:true",
+    "modelPart_left_sleeve:true",
+    "modelPart_right_sleeve:true",
+    "modelPart_left_pants_leg:true",
+    "modelPart_right_pants_leg:true",
+    "modelPart_hat:true"
 )
 
 $sodiumOptJson = @'
@@ -324,16 +515,30 @@ foreach ($instDir in $instDirs) {
     # Sync Resource Pack: Patch pack.mcmeta inside zip to format 34 (Minecraft 1.21 native)
     $rpDir = Join-Path $mcDir "resourcepacks"
     if (Test-Path $rpDir) {
-        $zipPacks = @(Join-Path $rpDir "beatrix_shop 1.9v1.zip", Join-Path $rpDir "beatrix_shop.zip")
+        $zipPacks = @(
+            Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip",
+            Join-Path $rpDir "beatrix_shop 1.9v1.zip",
+            Join-Path $rpDir "beatrix_shop.zip"
+        )
         $sourceZip = $null
         foreach ($zp in $zipPacks) {
             if ((Test-Path $zp) -and ((Get-Item $zp).Length -gt 10000000)) {
                 $sourceZip = $zp
-                Patch-BeatrixZip $zp
                 break
             }
         }
         if ($sourceZip) {
+            $altPack1 = Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip"
+            $altPack2 = Join-Path $rpDir "beatrix_shop 1.9v1.zip"
+            $cleanZip = Join-Path $rpDir "beatrix_shop.zip"
+            if (-not (Test-Path $altPack1)) { Copy-Item -Path $sourceZip -Destination $altPack1 -Force }
+            if (-not (Test-Path $altPack2)) { Copy-Item -Path $sourceZip -Destination $altPack2 -Force }
+            if (-not (Test-Path $cleanZip)) { Copy-Item -Path $sourceZip -Destination $cleanZip -Force }
+
+            Patch-BeatrixZip $altPack1
+            Patch-BeatrixZip $altPack2
+            Patch-BeatrixZip $cleanZip
+
             $extractedFolder = Join-Path $rpDir "beatrix_shop"
             $metaJsonFile = Join-Path $extractedFolder "pack.mcmeta"
             if (-not (Test-Path $metaJsonFile)) {
@@ -346,10 +551,6 @@ foreach ($instDir in $instDirs) {
                         & tar.exe -xf $sourceZip -C $extractedFolder 2>$null
                     }
                 }
-            }
-            $cleanZip = Join-Path $rpDir "beatrix_shop.zip"
-            if (-not (Test-Path $cleanZip) -and (Test-Path $sourceZip)) {
-                Copy-Item -Path $sourceZip -Destination $cleanZip -Force
             }
         }
     }

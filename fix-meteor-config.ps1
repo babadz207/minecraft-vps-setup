@@ -446,7 +446,7 @@ foreach ($inst in $targetInstances) {
         $optMap["pauseOnLostFocus"] = "false"
         $optMap["clouds"] = "0"
         $optMap["renderClouds"] = "false"
-        $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1.zip"]'
+        $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1 (1).zip"]'
         $optMap["incompatibleResourcePacks"] = '[]'
         
         $lines = @()

@@ -308,7 +308,7 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
             $optMap["simulationDistance"] = "32"
             $optMap["maxFps"] = "120"
             $optMap["enableVsync"] = "true"
-            $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1.zip"]'
+            $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1 (1).zip"]'
             $optMap["incompatibleResourcePacks"] = '[]'
             $lines = @()
             foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }

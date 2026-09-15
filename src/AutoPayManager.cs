@@ -389,7 +389,7 @@ public class AutoPayManagerForm : Form {
                             } else if (lines[i].StartsWith("enableVsync:")) {
                                 lines[i] = "enableVsync:true";
                             } else if (lines[i].StartsWith("resourcePacks:")) {
-                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1.zip\"]";
+                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1 (1).zip\"]";
                             } else if (lines[i].StartsWith("incompatibleResourcePacks:")) {
                                 lines[i] = "incompatibleResourcePacks:[]";
                             }
