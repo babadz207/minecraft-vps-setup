@@ -319,12 +319,12 @@ public class AutoPayManagerForm : Form {
                             foreach (string sp in sPaths) {
                                 string pDir = Path.GetDirectoryName(sp);
                                 if (!Directory.Exists(pDir)) Directory.CreateDirectory(pDir);
-                                File.WriteAllBytes(sp, spamGz);
+                                File.WriteAllBytes(sp, sMs.ToArray());
                             }
                         }
                     }
 
-                    // Standalone no-render files
+                    // Standalone no-render files (UNCOMPRESSED NBT)
                     string[] nrPaths = new string[] {
                         Path.Combine(meteorDir, @"modules\No Render.nbt"),
                         Path.Combine(meteorDir, @"modules\no-render.nbt"),
@@ -335,10 +335,10 @@ public class AutoPayManagerForm : Form {
                     foreach (string np in nrPaths) {
                         string pDir = Path.GetDirectoryName(np);
                         if (!Directory.Exists(pDir)) Directory.CreateDirectory(pDir);
-                        File.WriteAllBytes(np, noRenderBytes);
+                        File.WriteAllBytes(np, decomp);
                     }
 
-                    // Root modules.nbt
+                    // Root modules.nbt (RAW UNCOMPRESSED NBT for Meteor Client System.load)
                     using (MemoryStream rMs = new MemoryStream()) {
                         rMs.WriteByte(10); // TAG_Compound
                         rMs.WriteByte(0); rMs.WriteByte(0); // empty name
@@ -358,8 +358,12 @@ public class AutoPayManagerForm : Form {
                         }
                         rMs.WriteByte(0); // TAG_End
 
-                        byte[] finalGz = CompressGz(rMs.ToArray());
-                        File.WriteAllBytes(Path.Combine(meteorDir, "modules.nbt"), finalGz);
+                        byte[] finalRaw = rMs.ToArray();
+                        File.WriteAllBytes(Path.Combine(meteorDir, "modules.nbt"), finalRaw);
+
+                        string profDir = Path.Combine(meteorDir, @"profiles\default");
+                        if (!Directory.Exists(profDir)) Directory.CreateDirectory(profDir);
+                        File.WriteAllBytes(Path.Combine(profDir, "modules.nbt"), finalRaw);
                     }
                 } catch {}
             }
@@ -384,6 +388,10 @@ public class AutoPayManagerForm : Form {
                                 lines[i] = "maxFps:120";
                             } else if (lines[i].StartsWith("enableVsync:")) {
                                 lines[i] = "enableVsync:true";
+                            } else if (lines[i].StartsWith("resourcePacks:")) {
+                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1.zip\"]";
+                            } else if (lines[i].StartsWith("incompatibleResourcePacks:")) {
+                                lines[i] = "incompatibleResourcePacks:[]";
                             }
                         }
                         if (!hasSim) {

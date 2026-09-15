@@ -570,7 +570,7 @@ $instanceCfgLines = @(
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
 "OverrideCommands=true",
-"PreLaunchCommand=$preLaunchBatEscaped",
+"PreLaunchCommand=cmd.exe /c `"$preLaunchBatEscaped`"",
 "MinMemAlloc=512",
 "MaxMemAlloc=$maxMem",
 "JavaPath=$javaPathEscaped",
@@ -836,6 +836,7 @@ $noRenderCompBytes = New-Object byte[] ($noRenderDecomp.Length - 19)
 $moduleCount = 1
 $spamCompBytes = $null
 $spamGzBytes = $null
+$spamRawBytes = $null
 if ($EnableAutoPay -and (-not [string]::IsNullOrWhiteSpace($AutoPayCmd))) {
     $moduleCount = 2
     $spamCompBytes = Build-SpamNbtBytes -PayCommand $AutoPayCmd -Delay 400
@@ -843,13 +844,14 @@ if ($EnableAutoPay -and (-not [string]::IsNullOrWhiteSpace($AutoPayCmd))) {
     $spamStandaloneMs.WriteByte(10)
     $spamStandaloneMs.WriteByte(0); $spamStandaloneMs.WriteByte(0)
     $spamStandaloneMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
-    $spamGzBytes = Compress-GZipBytes -Data ($spamStandaloneMs.ToArray())
+    $spamRawBytes = $spamStandaloneMs.ToArray()
+    $spamGzBytes = Compress-GZipBytes -Data $spamRawBytes
 }
 $rootMs = New-Object System.IO.MemoryStream
 $rootMs.WriteByte(10) # TAG_Compound
-$rootMs.WriteByte(0); $rootMs.WriteByte(0) # ten rong
+$rootMs.WriteByte(0); $rootMs.WriteByte(0) # empty name
 $rootMs.WriteByte(9)  # TAG_List
-$rootMs.WriteByte(0); $rootMs.WriteByte(7) # do dai ten = 7
+$rootMs.WriteByte(0); $rootMs.WriteByte(7) # length = 7
 $rootMs.Write([System.Text.Encoding]::UTF8.GetBytes("modules"), 0, 7) # "modules"
 $rootMs.WriteByte(10) # List element type = TAG_Compound
 $rootMs.WriteByte([byte](($moduleCount -shr 24) -band 0xFF))
@@ -861,7 +863,9 @@ if ($moduleCount -eq 2 -and $spamCompBytes) {
     $rootMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
 }
 $rootMs.WriteByte(0)
-$finalGzModules = Compress-GZipBytes -Data ($rootMs.ToArray())
+
+# CRUCIAL: Meteor Client System.load calls NbtIo.read(Path) which expects RAW UNCOMPRESSED NBT!
+$finalRawModules = $rootMs.ToArray()
 
 $payCfgObj = @{
     user = $PayUser
@@ -871,10 +875,21 @@ $payCfgObj = @{
 }
 $payJson = $payCfgObj | ConvertTo-Json -Compress
 
-# Ghi vao CA 2 thu muc (.minecraft\meteor-client va root meteor-client)
+# Ensure $MeteorDirs includes all instances
+$MeteorDirs = @(
+    (Join-Path $MinecraftDir "meteor-client"),
+    (Join-Path $InstanceDir "meteor-client")
+)
+for ($idx = 2; $idx -le $InstanceCount; $idx++) {
+    $otherInstDir = Join-Path $PrismDir "instances\VPS-AFK-$idx"
+    $MeteorDirs += (Join-Path $otherInstDir ".minecraft\meteor-client")
+    $MeteorDirs += (Join-Path $otherInstDir "meteor-client")
+}
+
 foreach ($mTarget in $MeteorDirs) {
     if (-not (Test-Path $mTarget)) { New-Item -ItemType Directory -Path $mTarget -Force | Out-Null }
     
+    # Standalone No Render files (UNCOMPRESSED NBT)
     $destList = @(
         (Join-Path $mTarget "modules\No Render.nbt"),
         (Join-Path $mTarget "modules\no-render.nbt"),
@@ -885,10 +900,10 @@ foreach ($mTarget in $MeteorDirs) {
     foreach ($dst in $destList) {
         $p = Split-Path -Parent $dst
         if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }
-        [System.IO.File]::WriteAllBytes($dst, $noRenderBytes)
+        [System.IO.File]::WriteAllBytes($dst, $noRenderDecomp)
     }
 
-    if ($spamGzBytes) {
+    if ($spamRawBytes) {
         $spamDestList = @(
             (Join-Path $mTarget "modules\Spam.nbt"),
             (Join-Path $mTarget "modules\spam.nbt"),
@@ -898,13 +913,18 @@ foreach ($mTarget in $MeteorDirs) {
         foreach ($sd in $spamDestList) {
             $sp = Split-Path -Parent $sd
             if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
-            [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+            [System.IO.File]::WriteAllBytes($sd, $spamRawBytes)
         }
         $spamB64 = [Convert]::ToBase64String($spamGzBytes)
         [System.IO.File]::WriteAllText((Join-Path $mTarget "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
     }
 
-    [System.IO.File]::WriteAllBytes((Join-Path $mTarget "modules.nbt"), $finalGzModules)
+    # Root modules.nbt & default profile (RAW UNCOMPRESSED NBT)
+    [System.IO.File]::WriteAllBytes((Join-Path $mTarget "modules.nbt"), $finalRawModules)
+    $profDefaultDir = Join-Path $mTarget "profiles\default"
+    if (-not (Test-Path $profDefaultDir)) { New-Item -ItemType Directory -Path $profDefaultDir -Force | Out-Null }
+    [System.IO.File]::WriteAllBytes((Join-Path $profDefaultDir "modules.nbt"), $finalRawModules)
+
     [System.IO.File]::WriteAllText((Join-Path $mTarget "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
 }
 [System.IO.File]::WriteAllText((Join-Path $BaseDir "pay_config.json"), $payJson, [System.Text.Encoding]::UTF8)
@@ -918,6 +938,67 @@ Write-Success "Auto Pay config ($AutoPayCmd | Delay: 400 | Disable On Leave/Disc
 } catch {
 Write-Warn "Failed to initialize modules.nbt automatically: $_"
 }
+function Patch-BeatrixZip([string]$ZipPath) {
+    if (-not (Test-Path $ZipPath) -or ((Get-Item $ZipPath).Length -lt 1000000)) { return }
+    try {
+        Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+        $z = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Update)
+        $entry = $z.GetEntry("pack.mcmeta")
+        $needPatch = $true
+        if ($entry) {
+            try {
+                $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
+                $txt = $sr.ReadToEnd()
+                $sr.Dispose()
+                if ($txt -match '"pack_format":\s*34' -or $txt -match '"min_inclusive":\s*1') {
+                    $needPatch = $false
+                }
+            } catch {}
+        }
+        if ($needPatch) {
+            if ($entry) { $entry.Delete() }
+            $newE = $z.CreateEntry("pack.mcmeta")
+            $stream = $newE.Open()
+            $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+            $writer = New-Object System.IO.StreamWriter($stream, $utf8NoBom)
+            $meta = @'
+{
+  "pack": {
+    "description": [
+      "",
+      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
+      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
+      {"text": " | ", "color": "gray"},
+      {"text": "Crystal", "color": "#FF003D"},
+      {"text": "\n"},
+      {"text": "Custom by", "color": "#A565FF"},
+      {"text": " beatrix_shop", "color": "#FE88FF"}
+    ],
+    "pack_format": 34,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999},
+    "min_format": 1,
+    "max_format": 9999
+  },
+  "overlays": {
+    "entries": [
+      { "directory": "20-3", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-2", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-5", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-11", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 }
+    ]
+  }
+}
+'@
+            $writer.Write($meta)
+            $writer.Flush()
+            $writer.Dispose()
+            $stream.Dispose()
+        }
+        $z.Dispose()
+    } catch {}
+}
+
 Write-Title "STEP 9: INSTALL RESOURCE PACK (BEATRIX SHOP)"
 $packId = "1sJoybUBUmIM0Kcsus9AXYZ8_c6JBAJ1M"
 $packName = "beatrix_shop 1.9v1.zip"
@@ -932,14 +1013,41 @@ $dlPack = Download-DriveFile -FileId $packId -OutFile $targetPack -Desc $packNam
 if ($dlPack) { $packReady = $true; Write-Success "Resource Pack installed successfully at: $targetPack" }
 }
 if ($packReady) {
-for ($idx = 2; $idx -le $InstanceCount; $idx++) {
-$otherPackDir = Join-Path $PrismDir "instances\VPS-AFK-$idx\.minecraft\resourcepacks"
-$otherPackFile = Join-Path $otherPackDir $packName
-if (-not ((Test-Path $otherPackFile) -and ((Get-Item $otherPackFile).Length -gt 10000000))) {
-if (-not (Test-Path $otherPackDir)) { New-Item -ItemType Directory -Path $otherPackDir -Force | Out-Null }
-Copy-Item -Path $targetPack -Destination $otherPackFile -Force
-}
-}
+    # 1. Patch pack.mcmeta directly inside beatrix_shop 1.9v1.zip to format 34 (Minecraft 1.21 native)
+    Patch-BeatrixZip $targetPack
+    Write-Success "Patched $packName with native format 34 (auto-selected in Minecraft without warnings)!"
+
+    # 2. Also unpack to folder beatrix_shop for maximum compatibility
+    $cleanPackDir = Join-Path $ResourcePacksDir "beatrix_shop"
+    $cleanMetaFile = Join-Path $cleanPackDir "pack.mcmeta"
+    if (-not (Test-Path $cleanMetaFile)) {
+        try {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($targetPack, $cleanPackDir)
+        } catch {
+            if (Get-Command "tar.exe" -ErrorAction SilentlyContinue) {
+                if (-not (Test-Path $cleanPackDir)) { New-Item -ItemType Directory -Path $cleanPackDir -Force | Out-Null }
+                & tar.exe -xf $targetPack -C $cleanPackDir 2>$null
+            }
+        }
+    }
+    $cleanZipFile = Join-Path $ResourcePacksDir "beatrix_shop.zip"
+    if (-not (Test-Path $cleanZipFile)) { Copy-Item -Path $targetPack -Destination $cleanZipFile -Force }
+
+    for ($idx = 2; $idx -le $InstanceCount; $idx++) {
+        $otherPackDir = Join-Path $PrismDir "instances\VPS-AFK-$idx\.minecraft\resourcepacks"
+        if (-not (Test-Path $otherPackDir)) { New-Item -ItemType Directory -Path $otherPackDir -Force | Out-Null }
+        $otherPackFile = Join-Path $otherPackDir $packName
+        if (-not ((Test-Path $otherPackFile) -and ((Get-Item $otherPackFile).Length -gt 10000000))) {
+            Copy-Item -Path $targetPack -Destination $otherPackFile -Force
+        }
+        $otherCleanZip = Join-Path $otherPackDir "beatrix_shop.zip"
+        if (-not (Test-Path $otherCleanZip)) { Copy-Item -Path $targetPack -Destination $otherCleanZip -Force }
+        $otherCleanDir = Join-Path $otherPackDir "beatrix_shop"
+        if (-not (Test-Path $otherCleanDir) -and (Test-Path $cleanPackDir)) {
+            Copy-Item -Path $cleanPackDir -Destination $otherCleanDir -Recurse -Force
+        }
+    }
 }
 Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED FOR WEAK VPS)"
 $optionsFile = Join-Path $MinecraftDir "options.txt"
@@ -970,7 +1078,7 @@ $optionsLines = @(
 "gamma:1.0",
 "renderClouds:false",
 'resourcePacks:["vanilla","file/beatrix_shop 1.9v1.zip"]',
-'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip"]'
+'incompatibleResourcePacks:[]'
 )
 [System.IO.File]::WriteAllLines($optionsFile, $optionsLines, [System.Text.Encoding]::UTF8)
 $rootOpt = Join-Path $InstanceDir "options.txt"
@@ -1012,7 +1120,7 @@ $nextCfgLines = @(
 "OverrideJavaArgs=true",
 "OverrideMemory=true",
 "OverrideCommands=true",
-"PreLaunchCommand=$preLaunchBatEscaped",
+"PreLaunchCommand=cmd.exe /c `"$preLaunchBatEscaped`"",
 "MinMemAlloc=384",
 "MaxMemAlloc=1536",
 "JavaPath=$javaPathEscaped",
@@ -1123,12 +1231,16 @@ $apps = @(
 
 # Cai dat prelaunch.bat va sync-configs.ps1 vao bin
 $targetPrelaunch = Join-Path $binDir "prelaunch.bat"
-$localPrelaunch = Join-Path $ScriptDir "bin\prelaunch.bat"
-if (Test-Path $localPrelaunch) {
-    Copy-Item -Path $localPrelaunch -Destination $targetPrelaunch -Force
-} else {
-    Download-FileWithCurl "$repoRaw/bin/prelaunch.bat" $targetPrelaunch "Pre-Launch Guard Batch"
-}
+$prelaunchBatContent = @"
+@echo off
+setlocal
+set "BIN_DIR=%~dp0"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%BIN_DIR%sync-configs.ps1"
+endlocal
+exit /b 0
+"@
+[System.IO.File]::WriteAllText($targetPrelaunch, $prelaunchBatContent, [System.Text.Encoding]::ASCII)
+
 
 $targetSync = Join-Path $binDir "sync-configs.ps1"
 $localSync = Join-Path $ScriptDir "bin\sync-configs.ps1"

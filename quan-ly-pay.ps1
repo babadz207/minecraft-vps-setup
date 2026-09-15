@@ -231,7 +231,9 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
     }
     $rootMs.WriteByte(0)
 
-    $finalGzModules = Compress-GZipBytes -Data ($rootMs.ToArray())
+    # CRUCIAL: Meteor Client System.load calls NbtIo.read(Path) which expects RAW UNCOMPRESSED NBT!
+    $finalRawModules = $rootMs.ToArray()
+    $spamRawBytes = if ($spamStandaloneMs) { $spamStandaloneMs.ToArray() } else { $null }
 
     # Ghi vao TAT CA cac Instance co san (VPS-AFK-1, VPS-AFK-2, VPS-AFK-3...)
     foreach ($inst in $targetInstances) {
@@ -242,7 +244,7 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
         foreach ($mDir in $mDirs) {
             if (-not (Test-Path $mDir)) { New-Item -ItemType Directory -Path $mDir -Force | Out-Null }
 
-            # Standalone no-render files
+            # Standalone no-render files (UNCOMPRESSED NBT)
             $noRenderDestList = @(
                 (Join-Path $mDir "modules\No Render.nbt"),
                 (Join-Path $mDir "modules\no-render.nbt"),
@@ -252,10 +254,10 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
             foreach ($nd in $noRenderDestList) {
                 $np = Split-Path -Parent $nd
                 if (-not (Test-Path $np)) { New-Item -ItemType Directory -Path $np -Force | Out-Null }
-                [System.IO.File]::WriteAllBytes($nd, $noRenderBytes)
+                [System.IO.File]::WriteAllBytes($nd, $noRenderDecomp)
             }
 
-            if ($spamGzBytes) {
+            if ($spamRawBytes) {
                 $spamDestList = @(
                     (Join-Path $mDir "modules\Spam.nbt"),
                     (Join-Path $mDir "modules\spam.nbt"),
@@ -265,13 +267,16 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
                 foreach ($sd in $spamDestList) {
                     $sp = Split-Path -Parent $sd
                     if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
-                    [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+                    [System.IO.File]::WriteAllBytes($sd, $spamRawBytes)
                 }
                 $spamB64 = [Convert]::ToBase64String($spamGzBytes)
                 [System.IO.File]::WriteAllText((Join-Path $mDir "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
             }
 
-            [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalGzModules)
+            [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalRawModules)
+            $profDefaultDir = Join-Path $mDir "profiles\default"
+            if (-not (Test-Path $profDefaultDir)) { New-Item -ItemType Directory -Path $profDefaultDir -Force | Out-Null }
+            [System.IO.File]::WriteAllBytes((Join-Path $profDefaultDir "modules.nbt"), $finalRawModules)
 
             # Save pay_config.json
             $cfg = @{
@@ -301,7 +306,10 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
             }
             $optMap["renderDistance"] = "32"
             $optMap["simulationDistance"] = "32"
-            $optMap["maxFps"] = "260"
+            $optMap["maxFps"] = "120"
+            $optMap["enableVsync"] = "true"
+            $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1.zip"]'
+            $optMap["incompatibleResourcePacks"] = '[]'
             $lines = @()
             foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }
             [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)

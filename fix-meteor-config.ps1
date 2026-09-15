@@ -115,6 +115,67 @@ function Decompress-GZipBytes([byte[]]$Data) {
     return $msOut.ToArray()
 }
 
+function Patch-BeatrixZip([string]$ZipPath) {
+    if (-not (Test-Path $ZipPath) -or ((Get-Item $ZipPath).Length -lt 1000000)) { return }
+    try {
+        Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+        $z = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Update)
+        $entry = $z.GetEntry("pack.mcmeta")
+        $needPatch = $true
+        if ($entry) {
+            try {
+                $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
+                $txt = $sr.ReadToEnd()
+                $sr.Dispose()
+                if ($txt -match '"pack_format":\s*34' -or $txt -match '"min_inclusive":\s*1') {
+                    $needPatch = $false
+                }
+            } catch {}
+        }
+        if ($needPatch) {
+            if ($entry) { $entry.Delete() }
+            $newE = $z.CreateEntry("pack.mcmeta")
+            $stream = $newE.Open()
+            $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+            $writer = New-Object System.IO.StreamWriter($stream, $utf8NoBom)
+            $meta = @'
+{
+  "pack": {
+    "description": [
+      "",
+      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
+      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
+      {"text": " | ", "color": "gray"},
+      {"text": "Crystal", "color": "#FF003D"},
+      {"text": "\n"},
+      {"text": "Custom by", "color": "#A565FF"},
+      {"text": " beatrix_shop", "color": "#FE88FF"}
+    ],
+    "pack_format": 34,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999},
+    "min_format": 1,
+    "max_format": 9999
+  },
+  "overlays": {
+    "entries": [
+      { "directory": "20-3", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-2", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-5", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
+      { "directory": "21-11", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 }
+    ]
+  }
+}
+'@
+            $writer.Write($meta)
+            $writer.Flush()
+            $writer.Dispose()
+            $stream.Dispose()
+        }
+        $z.Dispose()
+    } catch {}
+}
+
 function Build-SpamNbtBytes([string]$PayCommand, [int]$Delay = 400) {
     $ms = New-Object System.IO.MemoryStream
     function Write-U16($val) {
@@ -237,7 +298,10 @@ if ($moduleCount -eq 2 -and $spamCompBytes) {
     $rootMs.Write($spamCompBytes, 0, $spamCompBytes.Length)
 }
 $rootMs.WriteByte(0) # TAG_End
-$finalGzModules = Compress-GZipBytes -Data ($rootMs.ToArray())
+
+# CRUCIAL: Meteor Client System.load calls NbtIo.read(Path) which expects RAW UNCOMPRESSED NBT!
+$finalRawModules = $rootMs.ToArray()
+$spamRawBytes = if ($spamStandaloneMs) { $spamStandaloneMs.ToArray() } else { $null }
 
 # 5. Write to ALL meteor directories across all instances
 Write-Host "[3/4] Writing configuration to all instances..." -ForegroundColor Yellow
@@ -250,7 +314,7 @@ foreach ($inst in $targetInstances) {
     foreach ($mDir in $mDirs) {
         if (-not (Test-Path $mDir)) { New-Item -ItemType Directory -Path $mDir -Force | Out-Null }
 
-        # Standalone No Render files
+        # Standalone No Render files (UNCOMPRESSED NBT)
         $noRenderDestList = @(
             (Join-Path $mDir "modules\No Render.nbt"),
             (Join-Path $mDir "modules\no-render.nbt"),
@@ -260,11 +324,11 @@ foreach ($inst in $targetInstances) {
         foreach ($nd in $noRenderDestList) {
             $np = Split-Path -Parent $nd
             if (-not (Test-Path $np)) { New-Item -ItemType Directory -Path $np -Force | Out-Null }
-            [System.IO.File]::WriteAllBytes($nd, $noRenderBytes)
+            [System.IO.File]::WriteAllBytes($nd, $noRenderDecomp)
         }
 
         # Standalone Spam files
-        if ($spamGzBytes) {
+        if ($spamRawBytes) {
             $spamDestList = @(
                 (Join-Path $mDir "modules\Spam.nbt"),
                 (Join-Path $mDir "modules\spam.nbt"),
@@ -274,14 +338,17 @@ foreach ($inst in $targetInstances) {
             foreach ($sd in $spamDestList) {
                 $sp = Split-Path -Parent $sd
                 if (-not (Test-Path $sp)) { New-Item -ItemType Directory -Path $sp -Force | Out-Null }
-                [System.IO.File]::WriteAllBytes($sd, $spamGzBytes)
+                [System.IO.File]::WriteAllBytes($sd, $spamRawBytes)
             }
             $spamB64 = [Convert]::ToBase64String($spamGzBytes)
             [System.IO.File]::WriteAllText((Join-Path $mDir "config spam auto pay.txt"), $spamB64, [System.Text.Encoding]::UTF8)
         }
 
-        # Root modules.nbt
-        [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalGzModules)
+        # Root modules.nbt (RAW UNCOMPRESSED NBT)
+        [System.IO.File]::WriteAllBytes((Join-Path $mDir "modules.nbt"), $finalRawModules)
+        $profDefaultDir = Join-Path $mDir "profiles\default"
+        if (-not (Test-Path $profDefaultDir)) { New-Item -ItemType Directory -Path $profDefaultDir -Force | Out-Null }
+        [System.IO.File]::WriteAllBytes((Join-Path $profDefaultDir "modules.nbt"), $finalRawModules)
 
         # pay_config.json
         $payJson = @{
@@ -379,12 +446,25 @@ foreach ($inst in $targetInstances) {
         $optMap["pauseOnLostFocus"] = "false"
         $optMap["clouds"] = "0"
         $optMap["renderClouds"] = "false"
+        $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1.zip"]'
+        $optMap["incompatibleResourcePacks"] = '[]'
         
         $lines = @()
         foreach ($k in $optMap.Keys) {
             $lines += "$k`:$($optMap[$k])"
         }
         [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
+    }
+
+    # 6.4. Patch beatrix_shop 1.9v1.zip with native pack_format 34
+    $rpDir = Join-Path $inst.FullName ".minecraft\resourcepacks"
+    if (Test-Path $rpDir) {
+        $zipPacks = @(Join-Path $rpDir "beatrix_shop 1.9v1.zip", Join-Path $rpDir "beatrix_shop.zip")
+        foreach ($zp in $zipPacks) {
+            if (Test-Path $zp) {
+                Patch-BeatrixZip $zp
+            }
+        }
     }
 
     # 6.5. Update instance.cfg (allocate 2.5GB RAM, unlock CPU & set PreLaunchCommand guard)
@@ -405,14 +485,14 @@ foreach ($inst in $targetInstances) {
                 $newCfg += "OverrideCommands=true"
                 $hasOverrideCmd = $true
             } elseif ($cl -match '^PreLaunchCommand=') {
-                $newCfg += "PreLaunchCommand=C:/MinecraftVPS/bin/prelaunch.bat"
+                $newCfg += 'PreLaunchCommand=cmd.exe /c "C:/MinecraftVPS/bin/prelaunch.bat"'
                 $hasPreLaunch = $true
             } else {
                 $newCfg += $cl
             }
         }
         if (-not $hasOverrideCmd) { $newCfg += "OverrideCommands=true" }
-        if (-not $hasPreLaunch) { $newCfg += "PreLaunchCommand=C:/MinecraftVPS/bin/prelaunch.bat" }
+        if (-not $hasPreLaunch) { $newCfg += 'PreLaunchCommand=cmd.exe /c "C:/MinecraftVPS/bin/prelaunch.bat"' }
         [System.IO.File]::WriteAllLines($instCfgPath, $newCfg, [System.Text.Encoding]::UTF8)
     }
 
