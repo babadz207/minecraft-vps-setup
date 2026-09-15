@@ -639,6 +639,32 @@ foreach ($instDir in $instDirs) {
     if (-not (Test-Path $sDat)) {
         [System.IO.File]::WriteAllBytes($sDat, [Convert]::FromBase64String($serversDatB64))
     }
+
+    # Ensure instance.cfg has JoinServerOnLaunch=true
+    $instCfg = Join-Path $instDir.FullName "instance.cfg"
+    if (Test-Path $instCfg) {
+        $cText = [System.IO.File]::ReadAllText($instCfg)
+        $mod = $false
+        if ($cText -notmatch "JoinServerOnLaunch=true") {
+            if ($cText -match "JoinServerOnLaunch=") {
+                $cText = $cText -replace "JoinServerOnLaunch=[^\r\n]*", "JoinServerOnLaunch=true"
+            } else {
+                $cText += "`r`nJoinServerOnLaunch=true"
+            }
+            $mod = $true
+        }
+        if ($cText -notmatch "JoinServerOnLaunchAddress=donutsmp.net") {
+            if ($cText -match "JoinServerOnLaunchAddress=") {
+                $cText = $cText -replace "JoinServerOnLaunchAddress=[^\r\n]*", "JoinServerOnLaunchAddress=donutsmp.net"
+            } else {
+                $cText += "`r`nJoinServerOnLaunchAddress=donutsmp.net"
+            }
+            $mod = $true
+        }
+        if ($mod) {
+            [System.IO.File]::WriteAllText($instCfg, $cText, [System.Text.Encoding]::UTF8)
+        }
+    }
 }
 
 # Central pay_config.json
