@@ -128,7 +128,7 @@ function Patch-BeatrixZip([string]$ZipPath) {
                 $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
                 $txt = $sr.ReadToEnd()
                 $sr.Dispose()
-                if ($txt -match '"pack_format":\s*34' -or $txt -match '"min_inclusive":\s*1') {
+                if ($txt -match '"pack_format":\s*75' -and -not ($txt -match 'overlays') -and ($txt -match '"min_format":\s*1')) {
                     $needPatch = $false
                 }
             } catch {}
@@ -142,9 +142,20 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "pack_format": 34,
-    "supported_formats": {"min_inclusive": 1, "max_inclusive": 100},
-    "description": "beatrix_shop 1.9"
+    "description": [
+      "",
+      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
+      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
+      {"text": " | ", "color": "gray"},
+      {"text": "Crystal", "color": "#FF003D"},
+      {"text": "\n"},
+      {"text": "Custom by", "color": "#A565FF"},
+      {"text": " beatrix_shop", "color": "#FE88FF"}
+    ],
+    "pack_format": 75,
+    "min_format": 1,
+    "max_format": 9999,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999}
   }
 }
 '@

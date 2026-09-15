@@ -1003,7 +1003,7 @@ function Patch-BeatrixZip([string]$ZipPath) {
                 $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
                 $txt = $sr.ReadToEnd()
                 $sr.Dispose()
-                if ($txt -match '"pack_format":\s*34' -and -not ($txt -match 'overlays') -and ($txt -match '"min_inclusive":\s*1')) {
+                if ($txt -match '"pack_format":\s*75' -and -not ($txt -match 'overlays') -and ($txt -match '"min_format":\s*1')) {
                     $needPatch = $false
                 }
             } catch {}
@@ -1017,9 +1017,20 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "pack_format": 34,
-    "supported_formats": {"min_inclusive": 1, "max_inclusive": 100},
-    "description": "beatrix_shop 1.9"
+    "description": [
+      "",
+      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
+      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
+      {"text": " | ", "color": "gray"},
+      {"text": "Crystal", "color": "#FF003D"},
+      {"text": "\n"},
+      {"text": "Custom by", "color": "#A565FF"},
+      {"text": " beatrix_shop", "color": "#FE88FF"}
+    ],
+    "pack_format": 75,
+    "min_format": 1,
+    "max_format": 9999,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999}
   }
 }
 '@
@@ -1073,9 +1084,9 @@ if ($packReady) {
         if (Test-Path $junk) { Remove-Item -Path $junk -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
-    # Patch pack.mcmeta to native format 34 (Minecraft 1.21.1)
+    # Patch pack.mcmeta to native format 75 (Minecraft 1.21.11)
     Patch-BeatrixZip $targetPack
-    Write-Success "Patched beatrix_shop.zip with native format 34 (auto-selected in Minecraft 1.21.1 without warnings)!"
+    Write-Success "Patched beatrix_shop.zip with native format 75 (auto-selected in Minecraft 1.21.11 without warnings)!"
 
     for ($idx = 2; $idx -le $InstanceCount; $idx++) {
         $otherPackDir = Join-Path $PrismDir "instances\VPS-AFK-$idx\.minecraft\resourcepacks"
@@ -1090,7 +1101,7 @@ if ($packReady) {
 Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED FOR WEAK VPS)"
 $optionsFile = Join-Path $MinecraftDir "options.txt"
 $optionsLines = @(
-"version:3955",
+"version:4671",
 "ao:false",
 "biomeBlendRadius:0",
 "chunkSectionFadeInTime:0.0",

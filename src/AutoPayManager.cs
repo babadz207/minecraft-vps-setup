@@ -414,11 +414,11 @@ public class AutoPayManagerForm : Form {
                 } catch {}
             }
 
-            // Ensure beatrix_shop pack.mcmeta has native pack_format 34 (Minecraft 1.21.1)
+            // Ensure beatrix_shop pack.mcmeta has native pack_format 75 (Minecraft 1.21.11)
             try {
                 string rpDir = Path.Combine(instPath, @".minecraft\resourcepacks");
                 if (Directory.Exists(rpDir)) {
-                    string cleanMeta = "{\n  \"pack\": {\n    \"pack_format\": 34,\n    \"supported_formats\": {\"min_inclusive\": 1, \"max_inclusive\": 100},\n    \"description\": \"beatrix_shop 1.9\"\n  }\n}";
+                    string cleanMeta = "{\n  \"pack\": {\n    \"pack_format\": 75,\n    \"min_format\": 1,\n    \"max_format\": 9999,\n    \"supported_formats\": {\"min_inclusive\": 1, \"max_inclusive\": 9999},\n    \"description\": \"beatrix_shop 1.9\"\n  }\n}";
                     string cleanZip = Path.Combine(rpDir, "beatrix_shop.zip");
                     string old1 = Path.Combine(rpDir, "beatrix_shop 1.9v1.zip");
                     string old2 = Path.Combine(rpDir, "beatrix_shop 1.9v1 (1).zip");
