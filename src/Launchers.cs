@@ -15,7 +15,6 @@ public class DonRAMLauncher {
                 try {
                     Process.Start(new ProcessStartInfo {
                         FileName = p,
-                        Arguments = "-minimized",
                         WorkingDirectory = Path.GetDirectoryName(p),
                         UseShellExecute = true
                     });

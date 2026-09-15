@@ -1403,7 +1403,7 @@ if (Test-Path $memReductExe) {
 Stop-Process -Name "memreduct" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 [System.IO.File]::WriteAllBytes((Join-Path $memReductDir "portable.dat"), [System.Text.Encoding]::ASCII.GetBytes("#PORTABLE#"))
-$mrIniLines = @("[memreduct]","AlwaysOnTop=0","AutoreductEnable=1","AutoreductValue=85","AutoreductIntervalEnable=1","AutoreductIntervalValue=30","ReductMask2=254","IsAllowStandbyListCleanup=1","BalloonCleanResults=0","IsNotificationsSound=0","IsShowWarningConfirmation=0","IsShowReductConfirmation=0","IsStartMinimized=1","IsCloseToTray=1","IsMinimizeToTray=1","CheckUpdatesPeriod=0","CheckUpdates=0")
+$mrIniLines = @("[memreduct]","AlwaysOnTop=0","AutoreductEnable=1","AutoreductValue=85","AutoreductIntervalEnable=1","AutoreductIntervalValue=30","ReductMask2=254","IsAllowStandbyListCleanup=1","BalloonCleanResults=0","IsNotificationsSound=0","IsShowWarningConfirmation=0","IsShowReductConfirmation=0","IsStartMinimized=0","IsCloseToTray=1","IsMinimizeToTray=1","CheckUpdatesPeriod=0","CheckUpdates=0")
 [System.IO.File]::WriteAllLines((Join-Path $memReductDir "memreduct.ini"), $mrIniLines, [System.Text.Encoding]::Unicode)
 $appDataMrDir = Join-Path $env:APPDATA "Henry++\Mem Reduct"
 if (-not (Test-Path $appDataMrDir)) { New-Item -ItemType Directory -Path $appDataMrDir -Force | Out-Null }
@@ -1549,20 +1549,38 @@ if ($Desktop -and (Test-Path $Desktop)) {
 # Xoa thu muc tam
 Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-Write-Title "SETUP COMPLETED 100%! MINECRAFT VPS IS READY"
-Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Software Rendering) : READY" -ForegroundColor Green
-Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)            : INITIALIZED" -ForegroundColor Green
-Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
-Write-Host " [OK] Mem Reduct: Auto Memory Cleaning (> 85% & every 30m)           : RUNNING" -ForegroundColor Green
-Write-Host " [OK] 6 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
+# Ensure Mem Reduct is launched and running
+$memReductDir = Join-Path $BaseDir "MemReduct"
+$memReductExe = Join-Path $memReductDir "memreduct.exe"
+if (Test-Path $memReductExe) {
+    try {
+        Start-Process -FilePath $memReductExe -WorkingDirectory $memReductDir -ErrorAction SilentlyContinue
+    } catch {}
+}
+
+# Clean terminal completely
+try { Clear-Host } catch { [System.Console]::Clear() }
+
+Write-Host ""
+Write-Host "==========================================================================" -ForegroundColor Cyan
+Write-Host "             MINECRAFT VPS SETUP COMPLETED SUCCESSFULLY!                 " -ForegroundColor Green
+Write-Host "==========================================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "QUICK START GUIDE FOR DONUTSMP.NET (ZERO TERMINAL):" -ForegroundColor Yellow
-Write-Host "  1. [1. Microsoft Login.exe]                 -> One-time Microsoft account setup" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  1. [1. Microsoft Login.exe]                 -> One-time Microsoft account setup" -ForegroundColor White
 Write-Host "  2. [2. Auto Reconnect 24-7 (Watchdog).exe]  -> 24/7 Monitoring Dashboard & Auto Reconnect" -ForegroundColor Green
 Write-Host "  3. [3. Auto Pay Manager.exe]                -> Configure /pay command & recipient" -ForegroundColor Cyan
-Write-Host "  4. [4. Clean RAM (Mem Reduct).exe]          -> Instant background memory cleaning" -ForegroundColor Cyan
-Write-Host "  5. [5. Open Prism Launcher.exe]             -> Direct Prism Launcher access" -ForegroundColor Cyan
-Write-Host "  6. [6. Go Cai Dat Prism (Reset).exe]        -> Clean uninstall & one-click reinstall" -ForegroundColor Red
+Write-Host "  4. [4. Clean RAM (Mem Reduct).exe]          -> Instant background memory cleaning" -ForegroundColor White
+Write-Host "  5. [5. Open Prism Launcher.exe]             -> Direct Prism Launcher access" -ForegroundColor White
+Write-Host "  6. [6. Go Cai Dat Prism (Reset).exe]        -> Clean uninstall & one-click reset" -ForegroundColor Red
 Write-Host ""
-Write-Host "Have a smooth and safe 24/7 AFK session!" -ForegroundColor Magenta
+Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkGray
+Write-Host " [STATUS] Mem Reduct: RUNNING (cleans RAM automatically every 30m & >85%)" -ForegroundColor Green
+Write-Host " [STATUS] AutoSell: Keybind '[' | Spam /pay: Keybind '`' | No-Render: READY" -ForegroundColor Yellow
+Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "Have a smooth and safe 24/7 AFK session on DonutSMP!" -ForegroundColor Magenta
+Write-Host ""
+
 
