@@ -380,29 +380,53 @@ public class AutoPayManagerForm : Form {
                         bool hasSim = false;
                         for (int i = 0; i < lines.Length; i++) {
                             if (lines[i].StartsWith("simulationDistance:")) {
-                                lines[i] = "simulationDistance:32";
+                                lines[i] = "simulationDistance:5";
                                 hasSim = true;
                             } else if (lines[i].StartsWith("renderDistance:")) {
-                                lines[i] = "renderDistance:32";
+                                lines[i] = "renderDistance:2";
                             } else if (lines[i].StartsWith("maxFps:")) {
-                                lines[i] = "maxFps:120";
+                                lines[i] = "maxFps:30";
                             } else if (lines[i].StartsWith("enableVsync:")) {
-                                lines[i] = "enableVsync:true";
+                                lines[i] = "enableVsync:false";
+                            } else if (lines[i].StartsWith("mipmapLevels:")) {
+                                lines[i] = "mipmapLevels:0";
+                            } else if (lines[i].StartsWith("ao:")) {
+                                lines[i] = "ao:false";
+                            } else if (lines[i].StartsWith("entityShadows:")) {
+                                lines[i] = "entityShadows:false";
                             } else if (lines[i].StartsWith("resourcePacks:")) {
-                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1 (1).zip\"]";
+                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1 (1).zip\",\"file/beatrix_shop 1.9v1.zip\"]";
                             } else if (lines[i].StartsWith("incompatibleResourcePacks:")) {
                                 lines[i] = "incompatibleResourcePacks:[]";
                             }
                         }
                         if (!hasSim) {
                             var list = new System.Collections.Generic.List<string>(lines);
-                            list.Add("simulationDistance:32");
+                            list.Add("simulationDistance:5");
                             lines = list.ToArray();
                         }
                         File.WriteAllLines(optFile, lines, Encoding.UTF8);
                     }
                 } catch {}
             }
+
+            // Disable mods that crash on software OpenGL or spam chat
+            try {
+                string[] modFolders = new string[] {
+                    Path.Combine(instPath, @".minecraft\mods"),
+                    Path.Combine(instPath, @"mods")
+                };
+                foreach (string md in modFolders) {
+                    if (Directory.Exists(md)) {
+                        foreach (string jf in Directory.GetFiles(md, "iris-fabric*.jar")) {
+                            try { File.Move(jf, jf + ".disabled"); } catch {}
+                        }
+                        foreach (string jf in Directory.GetFiles(md, "opsec*.jar")) {
+                            try { File.Move(jf, jf + ".disabled"); } catch {}
+                        }
+                    }
+                }
+            } catch {}
         }
 
         // Central pay_config.json & sync invocation

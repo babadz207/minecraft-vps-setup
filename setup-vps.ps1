@@ -671,13 +671,13 @@ $modsList = @(
 @{ Id = "1OZWQP3Tby89Of8brBVv3L5F9spsdGrq2"; Name = "fabric-api-0.141.4+1.21.11.jar" },
 @{ Id = "1kLLmW-acedBiOeqRDzNZMi_itXTdu54K"; Name = "ferritecore-8.2.0-fabric.jar" },
 @{ Id = "1eAStuadWw6IcL7MmHGMvpumps-7GZlGp"; Name = "ImmediatelyFast-Fabric-1.14.3+1.21.11.jar" },
-@{ Id = "1F31AM0IZbbw5bnVz4T7MrYvItrM2HLd0"; Name = "iris-fabric-1.10.7+mc1.21.11.jar" },
+@{ Id = "1F31AM0IZbbw5bnVz4T7MrYvItrM2HLd0"; Name = "iris-fabric-1.10.7+mc1.21.11.jar.disabled" },
 @{ Id = "1zEUWKqSQBltb83YWRddB1C_2iris3XNf"; Name = "litematica-fabric-1.21.11-0.26.12.jar" },
 @{ Id = "1bIKtPL5KLycmMetFJmDZiaQ8OfWMmScw"; Name = "lithium-fabric-0.21.4+mc1.21.11.jar" },
 @{ Id = "1eUby03S4Qv7iOf4ghgRk10oS-zA9YeA4"; Name = "malilib-fabric-1.21.11-0.27.16.jar" },
 @{ Id = "1tfO0LvqD_AEvpZp3KGfEPRo_AtiRzqRV"; Name = "meteor-client-1.21.11-82.jar" },
 @{ Id = "1dDYtI2wLbR6YmJpvRANYg6NW5Ti6zvau"; Name = "modmenu-17.0.1-beta.1.jar" },
-@{ Id = "1LOZEYDeYU4XIJ0z7yN9uOgX7y4ciH_oA"; Name = "opsec-1.21.11+v1.1.7.1.jar" },
+@{ Id = "1LOZEYDeYU4XIJ0z7yN9uOgX7y4ciH_oA"; Name = "opsec-1.21.11+v1.1.7.1.jar.disabled" },
 @{ Id = "1KCgU8KJAQ7KoQYG-Q_1dQP4H4qDzc3Bq"; Name = "placeholder-api-2.8.2+1.21.10.jar" },
 @{ Id = "1GU1zQZ4XzTTSlP34NoHWCbvompxrylvH"; Name = "sodium-fabric-0.8.7+mc1.21.11.jar" },
 @{ Id = "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"; Name = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar" }
@@ -685,6 +685,13 @@ $modsList = @(
 Remove-Item (Join-Path $ModsDir "sodium-fabric-0.8.13*") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "* (1).jar") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "*.tmp") -Force -ErrorAction SilentlyContinue
+# Disable active Iris & OpSec jars if present
+Get-ChildItem -Path $ModsDir -Filter "iris-fabric*.jar" -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq ".jar" } | ForEach-Object {
+    Move-Item -Path $_.FullName -Destination ($_.FullName + ".disabled") -Force -ErrorAction SilentlyContinue
+}
+Get-ChildItem -Path $ModsDir -Filter "opsec*.jar" -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq ".jar" } | ForEach-Object {
+    Move-Item -Path $_.FullName -Destination ($_.FullName + ".disabled") -Force -ErrorAction SilentlyContinue
+}
 $count = 0
 foreach ($mod in $modsList) {
 $count++
@@ -1087,13 +1094,13 @@ Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED 
 $optionsFile = Join-Path $MinecraftDir "options.txt"
 $optionsLines = @(
 "version:4671",
-"ao:true",
-"biomeBlendRadius:2",
-"chunkSectionFadeInTime:0.75",
-"cutoutLeaves:true",
-"enableVsync:true",
-"entityDistanceScaling:1.0",
-"entityShadows:true",
+"ao:false",
+"biomeBlendRadius:0",
+"chunkSectionFadeInTime:0.0",
+"cutoutLeaves:false",
+"enableVsync:false",
+"entityDistanceScaling:0.5",
+"entityShadows:false",
 "forceUnicodeFont:false",
 "japaneseGlyphVariants:false",
 "fov:0.325",
@@ -1101,24 +1108,24 @@ $optionsLines = @(
 "darknessEffectScale:1.0",
 "glintSpeed:0.5",
 "glintStrength:0.75",
-'graphicsPreset:"custom"',
-"prioritizeChunkUpdates:1",
+'graphicsPreset:"fast"',
+"prioritizeChunkUpdates:0",
 "fullscreen:false",
 "gamma:0.5",
 "guiScale:0",
 "maxAnisotropyBit:1",
 "textureFiltering:1",
-"maxFps:120",
+"maxFps:30",
 "improvedTransparency:false",
 'inactivityFpsLimit:"afk"',
-"mipmapLevels:4",
+"mipmapLevels:0",
 "narrator:0",
-"particles:0",
+"particles:2",
 "reducedDebugInfo:false",
-'renderClouds:"true"',
-"cloudRange:64",
-"renderDistance:32",
-"simulationDistance:32",
+'renderClouds:"false"',
+"cloudRange:0",
+"renderDistance:2",
+"simulationDistance:5",
 "screenEffectScale:1.0",
 'soundDevice:""',
 "vignette:true",
@@ -1151,7 +1158,7 @@ $optionsLines = @(
 "highContrast:false",
 "highContrastBlockOutline:false",
 "narratorHotkey:true",
-'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip"]',
+'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop 1.9v1.zip"]',
 "incompatibleResourcePacks:[]",
 "lastServer:",
 "lang:en_us",

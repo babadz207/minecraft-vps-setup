@@ -288,13 +288,13 @@ $payJson = $payCfgObj | ConvertTo-Json -Compress
 # Standardized options matching other running VPS
 $optionsLines = @(
     "version:4671",
-    "ao:true",
-    "biomeBlendRadius:2",
-    "chunkSectionFadeInTime:0.75",
-    "cutoutLeaves:true",
-    "enableVsync:true",
-    "entityDistanceScaling:1.0",
-    "entityShadows:true",
+    "ao:false",
+    "biomeBlendRadius:0",
+    "chunkSectionFadeInTime:0.0",
+    "cutoutLeaves:false",
+    "enableVsync:false",
+    "entityDistanceScaling:0.5",
+    "entityShadows:false",
     "forceUnicodeFont:false",
     "japaneseGlyphVariants:false",
     "fov:0.325",
@@ -302,24 +302,24 @@ $optionsLines = @(
     "darknessEffectScale:1.0",
     "glintSpeed:0.5",
     "glintStrength:0.75",
-    'graphicsPreset:"custom"',
-    "prioritizeChunkUpdates:1",
+    'graphicsPreset:"fast"',
+    "prioritizeChunkUpdates:0",
     "fullscreen:false",
     "gamma:0.5",
     "guiScale:0",
     "maxAnisotropyBit:1",
     "textureFiltering:1",
-    "maxFps:120",
+    "maxFps:30",
     "improvedTransparency:false",
     'inactivityFpsLimit:"afk"',
-    "mipmapLevels:4",
+    "mipmapLevels:0",
     "narrator:0",
-    "particles:0",
+    "particles:2",
     "reducedDebugInfo:false",
-    'renderClouds:"true"',
-    "cloudRange:64",
-    "renderDistance:32",
-    "simulationDistance:32",
+    'renderClouds:"false"',
+    "cloudRange:0",
+    "renderDistance:2",
+    "simulationDistance:5",
     "screenEffectScale:1.0",
     'soundDevice:""',
     "vignette:true",
@@ -352,7 +352,7 @@ $optionsLines = @(
     "highContrast:false",
     "highContrastBlockOutline:false",
     "narratorHotkey:true",
-    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip"]',
+    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop 1.9v1.zip"]',
     "incompatibleResourcePacks:[]",
     "lastServer:",
     "lang:en_us",
@@ -511,6 +511,22 @@ $instDirs = Get-ChildItem -Path $InstancesDir -Directory -ErrorAction SilentlyCo
 foreach ($instDir in $instDirs) {
     $mcDir = Join-Path $instDir.FullName ".minecraft"
     if (-not (Test-Path $mcDir)) { continue }
+
+    # Disable mods that crash on software OpenGL or spam chat
+    $modsDirs = @(
+        (Join-Path $mcDir "mods"),
+        (Join-Path $instDir.FullName "mods")
+    )
+    foreach ($mDir in $modsDirs) {
+        if (Test-Path $mDir) {
+            Get-ChildItem -Path $mDir -Filter "iris-fabric*.jar" -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq ".jar" } | ForEach-Object {
+                Move-Item -Path $_.FullName -Destination ($_.FullName + ".disabled") -Force -ErrorAction SilentlyContinue
+            }
+            Get-ChildItem -Path $mDir -Filter "opsec*.jar" -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq ".jar" } | ForEach-Object {
+                Move-Item -Path $_.FullName -Destination ($_.FullName + ".disabled") -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
 
     # Sync Resource Pack: Patch pack.mcmeta inside zip to format 34 (Minecraft 1.21 native)
     $rpDir = Join-Path $mcDir "resourcepacks"
