@@ -1226,7 +1226,8 @@ $apps = @(
     @{ Name = "WatchdogUI.exe"; Src = "WatchdogUI.cs"; Desktop = "2. Auto Reconnect 24-7 (Watchdog).exe"; Desc = "24/7 Watchdog & Auto Reconnect"; Main = $null; Ref = "System.Management.dll" },
     @{ Name = "AutoPayManager.exe"; Src = "AutoPayManager.cs"; Desktop = "3. Auto Pay Manager.exe"; Desc = "Auto Pay Manager"; Main = $null; Ref = $null },
     @{ Name = "DonRAM.exe"; Src = "Launchers.cs"; Desktop = "4. Clean RAM (Mem Reduct).exe"; Desc = "Clean RAM Launcher"; Main = "DonRAMLauncher"; Ref = $null },
-    @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Open Prism Launcher.exe"; Desc = "Prism Launcher Shortcut"; Main = "MoPrismLauncher"; Ref = $null }
+    @{ Name = "MoPrism.exe"; Src = "Launchers.cs"; Desktop = "5. Open Prism Launcher.exe"; Desc = "Prism Launcher Shortcut"; Main = "MoPrismLauncher"; Ref = $null },
+    @{ Name = "UninstallPrism.exe"; Src = "UninstallPrism.cs"; Desktop = "6. Go Cai Dat Prism (Reset).exe"; Desc = "Uninstall Prism & Reset VPS"; Main = $null; Ref = $null }
 )
 
 # Cai dat prelaunch.bat va sync-configs.ps1 vao bin
@@ -1297,7 +1298,7 @@ foreach ($app in $apps) {
     }
 }
 
-# 2. Don dep Desktop sach se va copy 5 file exe ra Desktop
+# 2. Don dep Desktop sach se va copy 6 file exe ra Desktop
 $Desktop = [Environment]::GetFolderPath('Desktop')
 if ($Desktop -and (Test-Path $Desktop)) {
     # Clean all legacy batch files and old shortcut variations
@@ -1313,6 +1314,8 @@ if ($Desktop -and (Test-Path $Desktop)) {
     Remove-Item (Join-Path $Desktop "*Clean RAM*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Mo Prism Launcher*") -Force -ErrorAction SilentlyContinue
     Remove-Item (Join-Path $Desktop "*Open Prism Launcher*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Go Cai Dat Prism*") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $Desktop "*Uninstall*") -Force -ErrorAction SilentlyContinue
 
     foreach ($app in $apps) {
         $sourceExe = Join-Path $binDir $app.Name
@@ -1320,7 +1323,7 @@ if ($Desktop -and (Test-Path $Desktop)) {
             Copy-Item -Path $sourceExe -Destination (Join-Path $Desktop $app.Desktop) -Force
         }
     }
-    Write-Success "Cleaned Desktop and deployed 5 standalone GUI (.exe) tools with zero terminal popups!"
+    Write-Success "Cleaned Desktop and deployed 6 standalone GUI (.exe) tools with zero terminal popups!"
 }
 
 # Xoa thu muc tam
@@ -1331,7 +1334,7 @@ Write-Host " [OK] Prism Launcher & Java 21 & Mesa3D OpenGL (Software Rendering) 
 Write-Host " [OK] Instance $InstanceName (Fabric 1.21.11 - donutsmp.net)            : INITIALIZED" -ForegroundColor Green
 Write-Host " [OK] 18 Mods + Meteor (No-Render) + AutoSell + Low-Resource Config  : INSTALLED" -ForegroundColor Green
 Write-Host " [OK] Mem Reduct: Auto Memory Cleaning (> 85% & every 30m)           : RUNNING" -ForegroundColor Green
-Write-Host " [OK] 5 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
+Write-Host " [OK] 6 Desktop GUI Executables (Zero-Terminal)                      : READY" -ForegroundColor Green
 Write-Host ""
 Write-Host "QUICK START GUIDE FOR DONUTSMP.NET (ZERO TERMINAL):" -ForegroundColor Yellow
 Write-Host "  1. [1. Microsoft Login.exe]                 -> One-time Microsoft account setup" -ForegroundColor Cyan
@@ -1339,6 +1342,7 @@ Write-Host "  2. [2. Auto Reconnect 24-7 (Watchdog).exe]  -> 24/7 Monitoring Das
 Write-Host "  3. [3. Auto Pay Manager.exe]                -> Configure /pay command & recipient" -ForegroundColor Cyan
 Write-Host "  4. [4. Clean RAM (Mem Reduct).exe]          -> Instant background memory cleaning" -ForegroundColor Cyan
 Write-Host "  5. [5. Open Prism Launcher.exe]             -> Direct Prism Launcher access" -ForegroundColor Cyan
+Write-Host "  6. [6. Go Cai Dat Prism (Reset).exe]        -> Clean uninstall & one-click reinstall" -ForegroundColor Red
 Write-Host ""
 Write-Host "Have a smooth and safe 24/7 AFK session!" -ForegroundColor Magenta
 
