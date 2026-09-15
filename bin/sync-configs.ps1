@@ -269,7 +269,7 @@ $payJson = $payCfgObj | ConvertTo-Json -Compress
 
 # Standardized options matching other running VPS
 $optionsLines = @(
-    "version:4671",
+    "version:3955",
     "ao:false",
     "biomeBlendRadius:0",
     "chunkSectionFadeInTime:0.0",
@@ -357,7 +357,7 @@ $optionsLines = @(
     "useNativeTransport:true",
     'mainHand:"right"',
     "attackIndicator:1",
-    "tutorialStep:movement",
+    "tutorialStep:none",
     "mouseWheelSensitivity:1.0",
     "rawMouseInput:true",
     "allowCursorChanges:true",

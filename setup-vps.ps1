@@ -1096,7 +1096,7 @@ if ($packReady) {
 Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED FOR WEAK VPS)"
 $optionsFile = Join-Path $MinecraftDir "options.txt"
 $optionsLines = @(
-"version:4671",
+"version:3955",
 "ao:false",
 "biomeBlendRadius:0",
 "chunkSectionFadeInTime:0.0",
@@ -1184,7 +1184,7 @@ $optionsLines = @(
 "useNativeTransport:true",
 'mainHand:"right"',
 "attackIndicator:1",
-"tutorialStep:movement",
+"tutorialStep:none",
 "mouseWheelSensitivity:1.0",
 "rawMouseInput:true",
 "allowCursorChanges:true",
