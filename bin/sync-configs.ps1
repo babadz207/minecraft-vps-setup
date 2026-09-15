@@ -68,7 +68,7 @@ if ($EnableAutoPay -and (-not [string]::IsNullOrWhiteSpace($PayUser))) {
 }
 
 # 2. Base64 No-Render GZip payload
-$noRenderGzB64 = "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"
+$noRenderGzB64 = "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"
 
 function Compress-GZipBytes([byte[]]$Data) {
     $msOut = New-Object System.IO.MemoryStream
@@ -100,7 +100,7 @@ function Patch-BeatrixZip([string]$ZipPath) {
                 $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
                 $txt = $sr.ReadToEnd()
                 $sr.Dispose()
-                if ($txt -match '"pack_format":\s*34' -or $txt -match '"min_inclusive":\s*1') {
+                if ($txt -match '"pack_format":\s*75' -and -not ($txt -match 'overlays')) {
                     $needPatch = $false
                 }
             } catch {}
@@ -114,28 +114,9 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "description": [
-      "",
-      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
-      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
-      {"text": " | ", "color": "gray"},
-      {"text": "Crystal", "color": "#FF003D"},
-      {"text": "\n"},
-      {"text": "Custom by", "color": "#A565FF"},
-      {"text": " beatrix_shop", "color": "#FE88FF"}
-    ],
-    "pack_format": 34,
-    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999},
-    "min_format": 1,
-    "max_format": 9999
-  },
-  "overlays": {
-    "entries": [
-      { "directory": "20-3", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-2", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-5", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-11", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 }
-    ]
+    "pack_format": 75,
+    "supported_formats": [1, 100],
+    "description": "beatrix_shop 1.9"
   }
 }
 '@
@@ -176,10 +157,11 @@ function Build-SpamNbtBytes([string]$PayCommand, [int]$Delay = 400) {
     Write-U16 $kb.Length
     $ms.Write($kb, 0, $kb.Length)
     Write-TagByte "isKey" 1
-    Write-TagInt "value" 96
+    Write-TagInt "value" -1
+    Write-TagInt "modifiers" 0
     $ms.WriteByte(0) # TAG_End
     Write-TagByte "toggleOnKeyRelease" 0
-    Write-TagByte "chatFeedback" 1
+    Write-TagByte "chatFeedback" 0
     Write-TagByte "favorite" 0
 
     $ms.WriteByte(10) # TAG_Compound "settings"
@@ -352,8 +334,8 @@ $optionsLines = @(
     "highContrast:false",
     "highContrastBlockOutline:false",
     "narratorHotkey:true",
-    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop 1.9v1.zip"]',
-    "incompatibleResourcePacks:[]",
+    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
+    'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
     "lastServer:",
     "lang:en_us",
     "chatVisibility:0",
@@ -498,7 +480,7 @@ $sodiumOptJson = @'
   },
   "performance": {
     "chunk_builder_threads": 1,
-    "always_defer_chunk_updates": true,
+    "always_defer_chunk_updates": false,
     "animate_only_visible_textures": true
   }
 }
@@ -578,6 +560,18 @@ foreach ($instDir in $instDirs) {
                         & tar.exe -xf $sourceZip -C $extractedFolder 2>$null
                     }
                 }
+            }
+            if (Test-Path $extractedFolder) {
+                $cleanMeta = @'
+{
+  "pack": {
+    "pack_format": 75,
+    "supported_formats": [1, 100],
+    "description": "beatrix_shop 1.9"
+  }
+}
+'@
+                [System.IO.File]::WriteAllText($metaJsonFile, $cleanMeta, (New-Object System.Text.UTF8Encoding($false)))
             }
         }
     }
