@@ -42,6 +42,14 @@ $BaseDir = "C:\MinecraftVPS"
 $ScriptDir = $BaseDir
 }
 $PrismDir = Join-Path $BaseDir "PrismLauncher"
+$existingAcc = Join-Path $PrismDir "accounts.json"
+if ((Test-Path $existingAcc) -and ((Get-Item $existingAcc).Length -gt 60)) {
+    try {
+        Copy-Item -Path $existingAcc -Destination "C:\accounts_backup.json" -Force -ErrorAction SilentlyContinue
+        Copy-Item -Path $existingAcc -Destination (Join-Path $env:USERPROFILE "accounts_backup.json") -Force -ErrorAction SilentlyContinue
+        Copy-Item -Path $existingAcc -Destination (Join-Path $env:TEMP "accounts_backup.json") -Force -ErrorAction SilentlyContinue
+    } catch {}
+}
 $TempDir = Join-Path $BaseDir "_temp"
 $InstanceName = "VPS-AFK-1"
 $InstanceDir = Join-Path $PrismDir "instances\$InstanceName"
