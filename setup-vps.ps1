@@ -707,6 +707,9 @@ $count = 0
 foreach ($mod in $modsList) {
 $count++
 $targetModFile = Join-Path $ModsDir $mod.Name
+if ($mod.Name -eq "autosell.jar" -and (Test-Path $targetModFile) -and ((Get-Item $targetModFile).Length -ne 49348)) {
+    Remove-Item $targetModFile -Force -ErrorAction SilentlyContinue
+}
 if (Test-ValidJar $targetModFile) {
 Write-Host "  [$count/$($modsList.Count)] Already present & verified: $($mod.Name) (Skipped)" -ForegroundColor DarkGray
 } else {

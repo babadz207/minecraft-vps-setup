@@ -530,10 +530,25 @@ foreach ($instDir in $instDirs) {
                     try { & curl.exe -k -L --connect-timeout 10 -o $fcJar $fcUrl } catch {}
                 }
             }
+            # Ensure latest autosell.jar from GitHub or local bin
+            $asJar = Join-Path $mDir "autosell.jar"
+            $latestAsSize = 49348
+            if (-not (Test-Path $asJar) -or ((Get-Item $asJar).Length -ne $latestAsSize)) {
+                $localAs = Join-Path $binDir "autosell.jar"
+                if ((Test-Path $localAs) -and ((Get-Item $localAs).Length -eq $latestAsSize)) {
+                    Copy-Item -Path $localAs -Destination $asJar -Force -ErrorAction SilentlyContinue
+                } else {
+                    $asUrl = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/bin/autosell.jar"
+                    try { & curl.exe -k -L --connect-timeout 10 -o $asJar $asUrl } catch {}
+                    if (Test-Path $asJar) {
+                        Copy-Item -Path $asJar -Destination (Join-Path $binDir "autosell.jar") -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            }
         }
     }
 
-    # Sync Resource Pack: Ensure clean beatrix_shop.zip with native pack_format 34
+    # Sync Resource Pack: Ensure clean beatrix_shop.zip with native pack_format 75
     $rpDir = Join-Path $mcDir "resourcepacks"
     if (Test-Path $rpDir) {
         $zipPacks = @(
