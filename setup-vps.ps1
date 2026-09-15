@@ -1453,10 +1453,12 @@ exit /b 0
 
 $targetSync = Join-Path $binDir "sync-configs.ps1"
 $localSync = Join-Path $ScriptDir "bin\sync-configs.ps1"
-if (Test-Path $localSync) {
+if ((Test-Path $localSync) -and ($localSync -ne $targetSync)) {
     Copy-Item -Path $localSync -Destination $targetSync -Force
 } else {
-    Download-FileWithCurl "$repoRaw/bin/sync-configs.ps1" $targetSync "Config Sync Script"
+    if (-not (Test-Path $targetSync)) {
+        Download-FileWithCurl "$repoRaw/bin/sync-configs.ps1" $targetSync "Config Sync Script"
+    }
 }
 
 if (Test-Path $targetSync) {
@@ -1477,10 +1479,10 @@ foreach ($app in $apps) {
     $localBin = Join-Path $ScriptDir ("bin\" + $app.Name)
     $localSrc = Join-Path $ScriptDir ("src\" + $app.Src)
 
-    if (Test-Path $localBin) {
+    if ((Test-Path $localBin) -and ($localBin -ne $targetExe)) {
         Copy-Item -Path $localBin -Destination $targetExe -Force
     }
-    if (Test-Path $localSrc) {
+    if ((Test-Path $localSrc) -and ($localSrc -ne $targetSrc)) {
         Copy-Item -Path $localSrc -Destination $targetSrc -Force
     }
 
