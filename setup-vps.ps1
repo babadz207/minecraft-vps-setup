@@ -790,7 +790,7 @@ $kb = [System.Text.Encoding]::UTF8.GetBytes("keybind")
 Write-U16 $kb.Length
 $ms.Write($kb, 0, $kb.Length)
 Write-TagByte "isKey" 1
-Write-TagInt "value" -1
+Write-TagInt "value" 96
 Write-TagInt "modifiers" 0
 $ms.WriteByte(0)
 Write-TagByte "toggleOnKeyRelease" 0

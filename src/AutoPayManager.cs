@@ -377,7 +377,7 @@ public class AutoPayManagerForm : Form {
                 try {
                     if (File.Exists(optFile)) {
                         string[] lines = File.ReadAllLines(optFile);
-                        bool hasSim = false;
+                        bool hasSim = false; bool hasAsKey = false;
                         for (int i = 0; i < lines.Length; i++) {
                             if (lines[i].StartsWith("simulationDistance:")) {
                                 lines[i] = "simulationDistance:32";
@@ -398,8 +398,12 @@ public class AutoPayManagerForm : Form {
                                 lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1.zip\",\"file/beatrix_shop 1.9v1 (1).zip\",\"file/beatrix_shop.zip\",\"file/beatrix_shop\"]";
                             } else if (lines[i].StartsWith("incompatibleResourcePacks:")) {
                                 lines[i] = "incompatibleResourcePacks:[\"file/beatrix_shop 1.9v1.zip\",\"file/beatrix_shop 1.9v1 (1).zip\",\"file/beatrix_shop.zip\",\"file/beatrix_shop\"]";
+                            } else if (lines[i].StartsWith("key_key.autosell.toggle:")) {
+                                lines[i] = "key_key.autosell.toggle:key.keyboard.left.bracket";
+                                hasAsKey = true;
                             }
                         }
+                        if (!hasAsKey) { var l = new System.Collections.Generic.List<string>(lines); l.Add("key_key.autosell.toggle:key.keyboard.left.bracket"); lines = l.ToArray(); }
                         if (!hasSim) {
                             var list = new System.Collections.Generic.List<string>(lines);
                             list.Add("simulationDistance:32");
@@ -412,7 +416,7 @@ public class AutoPayManagerForm : Form {
 
             // Ensure beatrix_shop pack.mcmeta has native pack_format 75 (No BOM, format 75)
             try {
-                string rpDir = Path.Combine(instPath, @".minecraftesourcepacks");
+                string rpDir = Path.Combine(instPath, @".minecraft\resourcepacks");
                 if (Directory.Exists(rpDir)) {
                     string cleanMeta = "{\n  \"pack\": {\n    \"pack_format\": 75,\n    \"supported_formats\": [1, 100],\n    \"description\": \"beatrix_shop 1.9\"\n  }\n}";
                     string extFolder = Path.Combine(rpDir, "beatrix_shop");
@@ -503,7 +507,7 @@ public class AutoPayManagerForm : Form {
             byte[] kb = Encoding.UTF8.GetBytes("keybind");
             ms.Write(kb, 0, 7);
             WriteTagByte(ms, "isKey", 1);
-            WriteTagInt(ms, "value", -1);
+            WriteTagInt(ms, "value", 96);
             WriteTagInt(ms, "modifiers", 0);
             ms.WriteByte(0); // TAG_End
 
