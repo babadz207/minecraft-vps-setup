@@ -680,7 +680,8 @@ $modsList = @(
 @{ Id = "1LOZEYDeYU4XIJ0z7yN9uOgX7y4ciH_oA"; Name = "opsec-1.21.11+v1.1.7.1.jar.disabled" },
 @{ Id = "1KCgU8KJAQ7KoQYG-Q_1dQP4H4qDzc3Bq"; Name = "placeholder-api-2.8.2+1.21.10.jar" },
 @{ Id = "1GU1zQZ4XzTTSlP34NoHWCbvompxrylvH"; Name = "sodium-fabric-0.8.7+mc1.21.11.jar" },
-@{ Id = "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"; Name = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar" }
+@{ Id = "1yYFsLDvUSYcvKn2LYwhRUTLND-eQ9MJU"; Name = "yet_another_config_lib_v3-3.8.2+1.21.11-fabric.jar" },
+@{ Id = ""; Name = "forcecloseloadingscreen-2.3.4.jar" }
 )
 Remove-Item (Join-Path $ModsDir "sodium-fabric-0.8.13*") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $ModsDir "* (1).jar") -Force -ErrorAction SilentlyContinue
@@ -1308,8 +1309,8 @@ $sodiumOptJson = @'
     "leaves_quality": "FAST"
   },
   "performance": {
-    "chunk_builder_threads": 0,
-    "always_defer_chunk_updates": false,
+    "chunk_builder_threads": 1,
+    "always_defer_chunk_updates": true,
     "animate_only_visible_textures": true
   }
 }

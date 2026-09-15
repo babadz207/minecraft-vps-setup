@@ -424,8 +424,22 @@ public class AutoPayManagerForm : Form {
                         foreach (string jf in Directory.GetFiles(md, "opsec*.jar")) {
                             try { File.Move(jf, jf + ".disabled"); } catch {}
                         }
+                        // Ensure forcecloseloadingscreen mod is copied if available
+                        string srcFc = Path.Combine(baseDir, @"bin\forcecloseloadingscreen-2.3.4.jar");
+                        string dstFc = Path.Combine(md, "forcecloseloadingscreen-2.3.4.jar");
+                        if (File.Exists(srcFc) && (!File.Exists(dstFc) || new FileInfo(dstFc).Length < 50000)) {
+                            try { File.Copy(srcFc, dstFc, true); } catch {}
+                        }
                     }
                 }
+            } catch {}
+
+            // Write sodium-options.json with always_defer_chunk_updates: true
+            try {
+                string cfgDir = Path.Combine(instPath, @".minecraft\config");
+                if (!Directory.Exists(cfgDir)) Directory.CreateDirectory(cfgDir);
+                string sodJson = "{\n  \"quality\": {\n    \"weather_quality\": \"FAST\",\n    \"leaves_quality\": \"FAST\"\n  },\n  \"performance\": {\n    \"chunk_builder_threads\": 1,\n    \"always_defer_chunk_updates\": true,\n    \"animate_only_visible_textures\": true\n  }\n}";
+                File.WriteAllText(Path.Combine(cfgDir, "sodium-options.json"), sodJson, Encoding.UTF8);
             } catch {}
         }
 

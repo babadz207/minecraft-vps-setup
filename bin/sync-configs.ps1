@@ -497,8 +497,8 @@ $sodiumOptJson = @'
     "leaves_quality": "FAST"
   },
   "performance": {
-    "chunk_builder_threads": 0,
-    "always_defer_chunk_updates": false,
+    "chunk_builder_threads": 1,
+    "always_defer_chunk_updates": true,
     "animate_only_visible_textures": true
   }
 }
@@ -512,7 +512,7 @@ foreach ($instDir in $instDirs) {
     $mcDir = Join-Path $instDir.FullName ".minecraft"
     if (-not (Test-Path $mcDir)) { continue }
 
-    # Disable mods that crash on software OpenGL or spam chat
+    # Disable mods that crash on software OpenGL or spam chat, and install force close loading screen
     $modsDirs = @(
         (Join-Path $mcDir "mods"),
         (Join-Path $instDir.FullName "mods")
@@ -524,6 +524,17 @@ foreach ($instDir in $instDirs) {
             }
             Get-ChildItem -Path $mDir -Filter "opsec*.jar" -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq ".jar" } | ForEach-Object {
                 Move-Item -Path $_.FullName -Destination ($_.FullName + ".disabled") -Force -ErrorAction SilentlyContinue
+            }
+            # Ensure forcecloseloadingscreen mod is present to skip getting stuck at "Loading terrain..."
+            $fcJar = Join-Path $mDir "forcecloseloadingscreen-2.3.4.jar"
+            if (-not (Test-Path $fcJar) -or ((Get-Item $fcJar).Length -lt 50000)) {
+                $localFc = Join-Path $binDir "forcecloseloadingscreen-2.3.4.jar"
+                if (Test-Path $localFc) {
+                    Copy-Item -Path $localFc -Destination $fcJar -Force -ErrorAction SilentlyContinue
+                } else {
+                    $fcUrl = "https://raw.githubusercontent.com/babadz207/minecraft-vps-setup/main/bin/forcecloseloadingscreen-2.3.4.jar"
+                    try { & curl.exe -k -L --connect-timeout 10 -o $fcJar $fcUrl } catch {}
+                }
             }
         }
     }
