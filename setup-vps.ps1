@@ -1577,7 +1577,7 @@ Write-Host "  6. [6. Go Cai Dat Prism (Reset).exe]        -> Clean uninstall & o
 Write-Host ""
 Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host " [STATUS] Mem Reduct: RUNNING (cleans RAM automatically every 30m & >85%)" -ForegroundColor Green
-Write-Host " [STATUS] AutoSell: Keybind '[' | Spam /pay: Keybind '`' | No-Render: READY" -ForegroundColor Yellow
+Write-Host " [STATUS] AutoSell: Keybind '[' | Spam /pay: Keybind '``' (phím ~) | No-Render: READY" -ForegroundColor Yellow
 Write-Host "--------------------------------------------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "Have a smooth and safe 24/7 AFK session on DonutSMP!" -ForegroundColor Magenta
