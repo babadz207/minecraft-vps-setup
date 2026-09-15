@@ -119,7 +119,7 @@ After running the auto setup, your VPS Desktop will be cleaned of all legacy `.b
 | **Config AutoSell** | `.minecraft\config\autosell.json` | Cấu hình tự động bán đồ, whitelist, auto-coordinates (tự điền Webhook nếu có) |
 | **Meteor No-Render** | `.minecraft\meteor-client\modules.nbt` | Cấu hình tắt render giảm 80% CPU, **tự động kích hoạt (active: 1)** khi mở game |
 | **Meteor Auto Pay (Spam)** | `.minecraft\meteor-client\modules.nbt` | Tự động spam `/pay <user> <amount>` mỗi 400 ticks, tắt disconnect, **tự kích hoạt sẵn** |
-| **Resource Pack** | `beatrix_shop 1.9v1.zip` | Đã đặt trong `resourcepacks` và kích hoạt sẵn trong `options.txt` |
+| **Resource Pack** | `beatrix_shop.zip` | Đã đặt trong `resourcepacks` và kích hoạt sẵn trong `options.txt` |
 | **Mem Reduct** | `henrypp/memreduct` v3.5.2 Portable | Tự động dọn RAM hệ thống mỗi 30 phút & khi RAM > 85%, giữ RAM Java an toàn |
 
 

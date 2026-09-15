@@ -395,9 +395,9 @@ public class AutoPayManagerForm : Form {
                             } else if (lines[i].StartsWith("entityShadows:")) {
                                 lines[i] = "entityShadows:false";
                             } else if (lines[i].StartsWith("resourcePacks:")) {
-                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop 1.9v1.zip\",\"file/beatrix_shop 1.9v1 (1).zip\",\"file/beatrix_shop.zip\",\"file/beatrix_shop\"]";
+                                lines[i] = "resourcePacks:[\"vanilla\",\"file/beatrix_shop.zip\"]";
                             } else if (lines[i].StartsWith("incompatibleResourcePacks:")) {
-                                lines[i] = "incompatibleResourcePacks:[\"file/beatrix_shop 1.9v1.zip\",\"file/beatrix_shop 1.9v1 (1).zip\",\"file/beatrix_shop.zip\",\"file/beatrix_shop\"]";
+                                lines[i] = "incompatibleResourcePacks:[]";
                             } else if (lines[i].StartsWith("key_key.autosell.toggle:")) {
                                 lines[i] = "key_key.autosell.toggle:key.keyboard.left.bracket";
                                 hasAsKey = true;
@@ -414,34 +414,37 @@ public class AutoPayManagerForm : Form {
                 } catch {}
             }
 
-            // Ensure beatrix_shop pack.mcmeta has native pack_format 75 (No BOM, format 75)
+            // Ensure beatrix_shop pack.mcmeta has native pack_format 34 (Minecraft 1.21.1)
             try {
                 string rpDir = Path.Combine(instPath, @".minecraft\resourcepacks");
                 if (Directory.Exists(rpDir)) {
-                    string cleanMeta = "{\n  \"pack\": {\n    \"pack_format\": 75,\n    \"supported_formats\": [1, 100],\n    \"description\": \"beatrix_shop 1.9\"\n  }\n}";
-                    string extFolder = Path.Combine(rpDir, "beatrix_shop");
-                    if (Directory.Exists(extFolder)) {
-                        File.WriteAllText(Path.Combine(extFolder, "pack.mcmeta"), cleanMeta, new UTF8Encoding(false));
+                    string cleanMeta = "{\n  \"pack\": {\n    \"pack_format\": 34,\n    \"supported_formats\": {\"min_inclusive\": 1, \"max_inclusive\": 100},\n    \"description\": \"beatrix_shop 1.9\"\n  }\n}";
+                    string cleanZip = Path.Combine(rpDir, "beatrix_shop.zip");
+                    string old1 = Path.Combine(rpDir, "beatrix_shop 1.9v1.zip");
+                    string old2 = Path.Combine(rpDir, "beatrix_shop 1.9v1 (1).zip");
+                    if (!File.Exists(cleanZip)) {
+                        if (File.Exists(old1) && new FileInfo(old1).Length > 10000000) File.Copy(old1, cleanZip, true);
+                        else if (File.Exists(old2) && new FileInfo(old2).Length > 10000000) File.Copy(old2, cleanZip, true);
                     }
-                    string[] zips = new string[] {
-                        Path.Combine(rpDir, "beatrix_shop 1.9v1.zip"),
-                        Path.Combine(rpDir, "beatrix_shop 1.9v1 (1).zip"),
-                        Path.Combine(rpDir, "beatrix_shop.zip")
-                    };
-                    foreach (string zp in zips) {
-                        if (File.Exists(zp) && new FileInfo(zp).Length > 1000000) {
-                            try {
-                                using (ZipArchive za = ZipFile.Open(zp, ZipArchiveMode.Update)) {
-                                    ZipArchiveEntry ze = za.GetEntry("pack.mcmeta");
-                                    if (ze != null) ze.Delete();
-                                    ZipArchiveEntry ne = za.CreateEntry("pack.mcmeta");
-                                    using (StreamWriter sw = new StreamWriter(ne.Open(), new UTF8Encoding(false))) {
-                                        sw.Write(cleanMeta);
-                                    }
+                    if (File.Exists(cleanZip) && new FileInfo(cleanZip).Length > 1000000) {
+                        try {
+                            using (ZipArchive za = ZipFile.Open(cleanZip, ZipArchiveMode.Update)) {
+                                ZipArchiveEntry ze = za.GetEntry("pack.mcmeta");
+                                if (ze != null) ze.Delete();
+                                ZipArchiveEntry ne = za.CreateEntry("pack.mcmeta");
+                                using (StreamWriter sw = new StreamWriter(ne.Open(), new UTF8Encoding(false))) {
+                                    sw.Write(cleanMeta);
                                 }
-                            } catch {}
-                        }
+                            }
+                        } catch {}
                     }
+                    // Clean up old redundant files and folders
+                    try {
+                        if (File.Exists(old1)) File.Delete(old1);
+                        if (File.Exists(old2)) File.Delete(old2);
+                        string extFolder = Path.Combine(rpDir, "beatrix_shop");
+                        if (Directory.Exists(extFolder)) Directory.Delete(extFolder, true);
+                    } catch {}
                 }
             } catch {}
 

@@ -142,28 +142,9 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "description": [
-      "",
-      {"text": "beatrix_pack", "bold": true, "color": "#FFFF00"},
-      {"text": " V1.9", "bold": true, "color": "#FFFFFF"},
-      {"text": " | ", "color": "gray"},
-      {"text": "Crystal", "color": "#FF003D"},
-      {"text": "\n"},
-      {"text": "Custom by", "color": "#A565FF"},
-      {"text": " beatrix_shop", "color": "#FE88FF"}
-    ],
     "pack_format": 34,
-    "supported_formats": {"min_inclusive": 1, "max_inclusive": 9999},
-    "min_format": 1,
-    "max_format": 9999
-  },
-  "overlays": {
-    "entries": [
-      { "directory": "20-3", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-2", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-5", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 },
-      { "directory": "21-11", "formats": {"min_inclusive": 1, "max_inclusive": 9999}, "min_format": 1, "max_format": 9999 }
-    ]
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 100},
+    "description": "beatrix_shop 1.9"
   }
 }
 '@
@@ -446,8 +427,9 @@ foreach ($inst in $targetInstances) {
         $optMap["pauseOnLostFocus"] = "false"
         $optMap["clouds"] = "0"
         $optMap["renderClouds"] = "false"
-        $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1 (1).zip"]'
+        $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop.zip"]'
         $optMap["incompatibleResourcePacks"] = '[]'
+        $optMap["key_key.autosell.toggle"] = 'key.keyboard.left.bracket'
         
         $lines = @()
         foreach ($k in $optMap.Keys) {
@@ -456,14 +438,30 @@ foreach ($inst in $targetInstances) {
         [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
     }
 
-    # 6.4. Patch beatrix_shop 1.9v1.zip with native pack_format 34
+    # 6.4. Ensure clean beatrix_shop.zip with native pack_format 34 and clean up old variations
     $rpDir = Join-Path $inst.FullName ".minecraft\resourcepacks"
     if (Test-Path $rpDir) {
-        $zipPacks = @(Join-Path $rpDir "beatrix_shop 1.9v1.zip", Join-Path $rpDir "beatrix_shop.zip")
+        $zipPacks = @(
+            Join-Path $rpDir "beatrix_shop.zip",
+            Join-Path $rpDir "beatrix_shop 1.9v1.zip",
+            Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip"
+        )
+        $sourceZip = $null
         foreach ($zp in $zipPacks) {
-            if (Test-Path $zp) {
-                Patch-BeatrixZip $zp
+            if ((Test-Path $zp) -and ((Get-Item $zp).Length -gt 10000000)) {
+                $sourceZip = $zp
+                break
             }
+        }
+        if ($sourceZip) {
+            $cleanZip = Join-Path $rpDir "beatrix_shop.zip"
+            if ($sourceZip -ne $cleanZip) {
+                Copy-Item -Path $sourceZip -Destination $cleanZip -Force
+            }
+            Patch-BeatrixZip $cleanZip
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop 1.9v1.zip") -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip") -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop") -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
 

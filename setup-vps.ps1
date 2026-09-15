@@ -50,6 +50,8 @@ if ((Test-Path $existingAcc) -and ((Get-Item $existingAcc).Length -gt 60)) {
         Copy-Item -Path $existingAcc -Destination (Join-Path $env:TEMP "accounts_backup.json") -Force -ErrorAction SilentlyContinue
     } catch {}
 }
+# Stop any running Minecraft or launcher instances so configurations/options aren't locked or overwritten
+Get-Process -Name "prismlauncher", "javaw", "java" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 $TempDir = Join-Path $BaseDir "_temp"
 $InstanceName = "VPS-AFK-1"
 $InstanceDir = Join-Path $PrismDir "instances\$InstanceName"
@@ -992,7 +994,8 @@ function Patch-BeatrixZip([string]$ZipPath) {
     try {
         Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-        $z = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Update)
+        $fullPath = (Resolve-Path $ZipPath).Path
+        $z = [System.IO.Compression.ZipFile]::Open($fullPath, [System.IO.Compression.ZipArchiveMode]::Update)
         $entry = $z.GetEntry("pack.mcmeta")
         $needPatch = $true
         if ($entry) {
@@ -1000,7 +1003,7 @@ function Patch-BeatrixZip([string]$ZipPath) {
                 $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
                 $txt = $sr.ReadToEnd()
                 $sr.Dispose()
-                if ($txt -match '"pack_format":\s*75' -and -not ($txt -match 'overlays')) {
+                if ($txt -match '"pack_format":\s*34' -and -not ($txt -match 'overlays') -and ($txt -match '"min_inclusive":\s*1')) {
                     $needPatch = $false
                 }
             } catch {}
@@ -1014,8 +1017,8 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "pack_format": 75,
-    "supported_formats": [1, 100],
+    "pack_format": 34,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 100},
     "description": "beatrix_shop 1.9"
   }
 }
@@ -1031,66 +1034,57 @@ function Patch-BeatrixZip([string]$ZipPath) {
 
 Write-Title "STEP 9: INSTALL RESOURCE PACK (BEATRIX SHOP)"
 $packId = "1sJoybUBUmIM0Kcsus9AXYZ8_c6JBAJ1M"
-$packName = "beatrix_shop 1.9v1.zip"
+$packName = "beatrix_shop.zip"
 $targetPack = Join-Path $ResourcePacksDir $packName
 $packReady = $false
+
 if ((Test-Path $targetPack) -and ((Get-Item $targetPack).Length -gt 10000000)) {
-$packReady = $true
-Write-Success "Resource Pack $packName already exists ($([math]::Round((Get-Item $targetPack).Length/1MB, 1)) MB), skipping download!"
+    $packReady = $true
+    Write-Success "Resource Pack $packName already exists ($([math]::Round((Get-Item $targetPack).Length/1MB, 1)) MB), skipping download!"
 } else {
-Write-Step "9/11" "Downloading Beatrix Shop Resource Pack (30MB) from Google Drive..."
-$dlPack = Download-DriveFile -FileId $packId -OutFile $targetPack -Desc $packName
-if ($dlPack) { $packReady = $true; Write-Success "Resource Pack installed successfully at: $targetPack" }
-}
-if ($packReady) {
-    # Ensure BOTH exact filenames exist for seamless options.txt compatibility
-    $targetPackAlt = Join-Path $ResourcePacksDir "beatrix_shop 1.9v1 (1).zip"
-    if (-not (Test-Path $targetPackAlt)) { Copy-Item -Path $targetPack -Destination $targetPackAlt -Force }
-    $cleanZipFile = Join-Path $ResourcePacksDir "beatrix_shop.zip"
-    if (-not (Test-Path $cleanZipFile)) { Copy-Item -Path $targetPack -Destination $cleanZipFile -Force }
-
-    # Patch pack.mcmeta directly in all zip variations to format 34 (Minecraft 1.21 native)
-    Patch-BeatrixZip $targetPack
-    Patch-BeatrixZip $targetPackAlt
-    Write-Success "Patched beatrix_shop with native format 75 (auto-selected in Minecraft without warnings)!"
-
-    # Unpack to folder beatrix_shop for maximum compatibility
-    $cleanPackDir = Join-Path $ResourcePacksDir "beatrix_shop"
-    $cleanMetaFile = Join-Path $cleanPackDir "pack.mcmeta"
-    if (-not (Test-Path $cleanMetaFile)) {
-        try {
-            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($targetPack, $cleanPackDir)
-        } catch {
-            if (Get-Command "tar.exe" -ErrorAction SilentlyContinue) {
-                if (-not (Test-Path $cleanPackDir)) { New-Item -ItemType Directory -Path $cleanPackDir -Force | Out-Null }
-                & tar.exe -xf $targetPack -C $cleanPackDir 2>$null
-            }
+    # Check if any old naming variation exists to avoid re-downloading
+    $oldVariations = @(
+        (Join-Path $ResourcePacksDir "beatrix_shop 1.9v1.zip"),
+        (Join-Path $ResourcePacksDir "beatrix_shop 1.9v1 (1).zip")
+    )
+    foreach ($oldV in $oldVariations) {
+        if ((Test-Path $oldV) -and ((Get-Item $oldV).Length -gt 10000000)) {
+            Copy-Item -Path $oldV -Destination $targetPack -Force
+            $packReady = $true
+            Write-Success "Reused existing $([System.IO.Path]::GetFileName($oldV)) -> $packName ($([math]::Round((Get-Item $targetPack).Length/1MB, 1)) MB)!"
+            break
         }
     }
-    if (Test-Path $cleanPackDir) {
-        $cleanMeta = @'
-{
-  "pack": {
-    "pack_format": 75,
-    "supported_formats": [1, 100],
-    "description": "beatrix_shop 1.9"
-  }
-}
-'@
-        [System.IO.File]::WriteAllText($cleanMetaFile, $cleanMeta, (New-Object System.Text.UTF8Encoding($false)))
+    if (-not $packReady) {
+        Write-Step "9/11" "Downloading Beatrix Shop Resource Pack (30MB) from Google Drive..."
+        $dlPack = Download-DriveFile -FileId $packId -OutFile $targetPack -Desc $packName
+        if ($dlPack) { $packReady = $true; Write-Success "Resource Pack installed successfully at: $targetPack" }
     }
+}
+
+if ($packReady) {
+    # Clean up old redundant/broken variations to keep folder clean and prevent Minecraft confusion
+    $oldJunk = @(
+        (Join-Path $ResourcePacksDir "beatrix_shop 1.9v1.zip"),
+        (Join-Path $ResourcePacksDir "beatrix_shop 1.9v1 (1).zip"),
+        (Join-Path $ResourcePacksDir "beatrix_shop")
+    )
+    foreach ($junk in $oldJunk) {
+        if (Test-Path $junk) { Remove-Item -Path $junk -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Patch pack.mcmeta to native format 34 (Minecraft 1.21.1)
+    Patch-BeatrixZip $targetPack
+    Write-Success "Patched beatrix_shop.zip with native format 34 (auto-selected in Minecraft 1.21.1 without warnings)!"
 
     for ($idx = 2; $idx -le $InstanceCount; $idx++) {
         $otherPackDir = Join-Path $PrismDir "instances\VPS-AFK-$idx\.minecraft\resourcepacks"
         if (-not (Test-Path $otherPackDir)) { New-Item -ItemType Directory -Path $otherPackDir -Force | Out-Null }
-        Copy-Item -Path $targetPack -Destination (Join-Path $otherPackDir "beatrix_shop 1.9v1.zip") -Force
-        Copy-Item -Path $targetPack -Destination (Join-Path $otherPackDir "beatrix_shop 1.9v1 (1).zip") -Force
         Copy-Item -Path $targetPack -Destination (Join-Path $otherPackDir "beatrix_shop.zip") -Force
-        $otherCleanDir = Join-Path $otherPackDir "beatrix_shop"
-        if (-not (Test-Path $otherCleanDir) -and (Test-Path $cleanPackDir)) {
-            Copy-Item -Path $cleanPackDir -Destination $otherCleanDir -Recurse -Force
-        }
+        # Clean up old variations in other instances too
+        Remove-Item -Path (Join-Path $otherPackDir "beatrix_shop 1.9v1.zip") -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path (Join-Path $otherPackDir "beatrix_shop 1.9v1 (1).zip") -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path (Join-Path $otherPackDir "beatrix_shop") -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 Write-Title "STEP 10: CONFIGURE ULTRA-LOW RESOURCE SETTINGS & SODIUM (OPTIMIZED FOR WEAK VPS)"
@@ -1161,8 +1155,8 @@ $optionsLines = @(
 "highContrast:false",
 "highContrastBlockOutline:false",
 "narratorHotkey:true",
-'resourcePacks:["vanilla","file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
-'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
+'resourcePacks:["vanilla","file/beatrix_shop.zip"]',
+'incompatibleResourcePacks:[]',
 "lastServer:",
 "lang:en_us",
 "chatVisibility:0",
@@ -1351,6 +1345,7 @@ $nextCfgLines = @(
 $nextMinecraftDir = Join-Path $nextDir ".minecraft"
 if (Test-Path $nextMinecraftDir) { Remove-Item -Path $nextMinecraftDir -Recurse -Force -ErrorAction SilentlyContinue }
 Copy-Item -Path $MinecraftDir -Destination $nextMinecraftDir -Recurse -Force
+Copy-Item -Path $rootOpt -Destination (Join-Path $nextDir "options.txt") -Force
 $nextNatDir = Join-Path $nextDir "natives"
 New-Item -ItemType Directory -Path $nextNatDir -Force | Out-Null
 if ($activeMesaDll) {

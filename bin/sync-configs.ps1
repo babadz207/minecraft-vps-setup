@@ -92,7 +92,8 @@ function Patch-BeatrixZip([string]$ZipPath) {
     try {
         Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-        $z = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Update)
+        $fullPath = (Resolve-Path $ZipPath).Path
+        $z = [System.IO.Compression.ZipFile]::Open($fullPath, [System.IO.Compression.ZipArchiveMode]::Update)
         $entry = $z.GetEntry("pack.mcmeta")
         $needPatch = $true
         if ($entry) {
@@ -100,7 +101,7 @@ function Patch-BeatrixZip([string]$ZipPath) {
                 $sr = New-Object System.IO.StreamReader($entry.Open(), [System.Text.Encoding]::UTF8)
                 $txt = $sr.ReadToEnd()
                 $sr.Dispose()
-                if ($txt -match '"pack_format":\s*75' -and -not ($txt -match 'overlays')) {
+                if ($txt -match '"pack_format":\s*34' -and -not ($txt -match 'overlays') -and ($txt -match '"min_inclusive":\s*1')) {
                     $needPatch = $false
                 }
             } catch {}
@@ -114,8 +115,8 @@ function Patch-BeatrixZip([string]$ZipPath) {
             $meta = @'
 {
   "pack": {
-    "pack_format": 75,
-    "supported_formats": [1, 100],
+    "pack_format": 34,
+    "supported_formats": {"min_inclusive": 1, "max_inclusive": 100},
     "description": "beatrix_shop 1.9"
   }
 }
@@ -334,8 +335,8 @@ $optionsLines = @(
     "highContrast:false",
     "highContrastBlockOutline:false",
     "narratorHotkey:true",
-    'resourcePacks:["vanilla","file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
-    'incompatibleResourcePacks:["file/beatrix_shop 1.9v1.zip","file/beatrix_shop 1.9v1 (1).zip","file/beatrix_shop.zip","file/beatrix_shop"]',
+    'resourcePacks:["vanilla","file/beatrix_shop.zip"]',
+    'incompatibleResourcePacks:[]',
     "lastServer:",
     "lang:en_us",
     "chatVisibility:0",
@@ -521,13 +522,13 @@ foreach ($instDir in $instDirs) {
         }
     }
 
-    # Sync Resource Pack: Patch pack.mcmeta inside zip to format 34 (Minecraft 1.21 native)
+    # Sync Resource Pack: Ensure clean beatrix_shop.zip with native pack_format 34
     $rpDir = Join-Path $mcDir "resourcepacks"
     if (Test-Path $rpDir) {
         $zipPacks = @(
-            Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip",
+            Join-Path $rpDir "beatrix_shop.zip",
             Join-Path $rpDir "beatrix_shop 1.9v1.zip",
-            Join-Path $rpDir "beatrix_shop.zip"
+            Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip"
         )
         $sourceZip = $null
         foreach ($zp in $zipPacks) {
@@ -537,42 +538,16 @@ foreach ($instDir in $instDirs) {
             }
         }
         if ($sourceZip) {
-            $altPack1 = Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip"
-            $altPack2 = Join-Path $rpDir "beatrix_shop 1.9v1.zip"
             $cleanZip = Join-Path $rpDir "beatrix_shop.zip"
-            if (-not (Test-Path $altPack1)) { Copy-Item -Path $sourceZip -Destination $altPack1 -Force }
-            if (-not (Test-Path $altPack2)) { Copy-Item -Path $sourceZip -Destination $altPack2 -Force }
-            if (-not (Test-Path $cleanZip)) { Copy-Item -Path $sourceZip -Destination $cleanZip -Force }
-
-            Patch-BeatrixZip $altPack1
-            Patch-BeatrixZip $altPack2
+            if ($sourceZip -ne $cleanZip) {
+                Copy-Item -Path $sourceZip -Destination $cleanZip -Force
+            }
             Patch-BeatrixZip $cleanZip
 
-            $extractedFolder = Join-Path $rpDir "beatrix_shop"
-            $metaJsonFile = Join-Path $extractedFolder "pack.mcmeta"
-            if (-not (Test-Path $metaJsonFile)) {
-                try {
-                    Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-                    [System.IO.Compression.ZipFile]::ExtractToDirectory($sourceZip, $extractedFolder)
-                } catch {
-                    if (Get-Command "tar.exe" -ErrorAction SilentlyContinue) {
-                        if (-not (Test-Path $extractedFolder)) { New-Item -ItemType Directory -Path $extractedFolder -Force | Out-Null }
-                        & tar.exe -xf $sourceZip -C $extractedFolder 2>$null
-                    }
-                }
-            }
-            if (Test-Path $extractedFolder) {
-                $cleanMeta = @'
-{
-  "pack": {
-    "pack_format": 75,
-    "supported_formats": [1, 100],
-    "description": "beatrix_shop 1.9"
-  }
-}
-'@
-                [System.IO.File]::WriteAllText($metaJsonFile, $cleanMeta, (New-Object System.Text.UTF8Encoding($false)))
-            }
+            # Clean up old redundant/broken variations to keep folder clean and prevent Minecraft confusion
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop 1.9v1.zip") -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop 1.9v1 (1).zip") -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path (Join-Path $rpDir "beatrix_shop") -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
 

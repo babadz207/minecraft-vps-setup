@@ -309,8 +309,9 @@ function Save-AutoPaySettings([string]$TargetUser, [string]$TargetAmount, [bool]
             $optMap["simulationDistance"] = "32"
             $optMap["maxFps"] = "120"
             $optMap["enableVsync"] = "true"
-            $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop 1.9v1 (1).zip"]'
+            $optMap["resourcePacks"] = '["vanilla","file/beatrix_shop.zip"]'
             $optMap["incompatibleResourcePacks"] = '[]'
+            $optMap["key_key.autosell.toggle"] = 'key.keyboard.left.bracket'
             $lines = @()
             foreach ($k in $optMap.Keys) { $lines += "$k`:$($optMap[$k])" }
             [System.IO.File]::WriteAllLines($optPath, $lines, [System.Text.Encoding]::UTF8)
