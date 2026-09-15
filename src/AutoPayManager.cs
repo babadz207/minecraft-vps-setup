@@ -380,12 +380,12 @@ public class AutoPayManagerForm : Form {
                         bool hasSim = false;
                         for (int i = 0; i < lines.Length; i++) {
                             if (lines[i].StartsWith("simulationDistance:")) {
-                                lines[i] = "simulationDistance:5";
+                                lines[i] = "simulationDistance:32";
                                 hasSim = true;
                             } else if (lines[i].StartsWith("renderDistance:")) {
-                                lines[i] = "renderDistance:2";
+                                lines[i] = "renderDistance:32";
                             } else if (lines[i].StartsWith("maxFps:")) {
-                                lines[i] = "maxFps:30";
+                                lines[i] = "maxFps:120";
                             } else if (lines[i].StartsWith("enableVsync:")) {
                                 lines[i] = "enableVsync:false";
                             } else if (lines[i].StartsWith("mipmapLevels:")) {
@@ -402,7 +402,7 @@ public class AutoPayManagerForm : Form {
                         }
                         if (!hasSim) {
                             var list = new System.Collections.Generic.List<string>(lines);
-                            list.Add("simulationDistance:5");
+                            list.Add("simulationDistance:32");
                             lines = list.ToArray();
                         }
                         File.WriteAllLines(optFile, lines, Encoding.UTF8);
